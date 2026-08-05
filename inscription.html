@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Créer mon compte — Afrilaunch Partners</title>
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ffffff;
+    --bg-alt:#f7f4ee;
+    --line:#e9e4d9;
+    --ink:#221f1a;
+    --ink-dim:#6a6459;
+    --ink-faint:#a49c8d;
+    --accent:#f7c948;
+    --accent-deep:#e2a900;
+    --danger:#c0392b;
+    --radius:18px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg); color:var(--ink); font-family:'Inter', sans-serif; line-height:1.55;}
+  h1{font-family:'Fraunces', serif; font-weight:500; line-height:1.15; letter-spacing:-0.01em;}
+  a{color:inherit; text-decoration:none;}
+  a:focus-visible, button:focus-visible, input:focus-visible{outline:2px solid var(--accent-deep); outline-offset:3px;}
+  .wrap{max-width:460px; margin:0 auto; padding:0 24px;}
+
+  header{padding:24px 0;}
+  .back{display:inline-flex; align-items:center; gap:6px; color:var(--ink-dim); font-size:14px; font-weight:600;}
+  .back:hover{color:var(--ink);}
+
+  main{padding:16px 0 80px;}
+  .eyebrow{
+    color:var(--accent-deep); font-size:13px; font-weight:700; text-transform:uppercase;
+    letter-spacing:0.04em; margin-bottom:14px; display:block;
+  }
+  h1{font-size:clamp(26px,4vw,32px); margin-bottom:10px;}
+  .lead{color:var(--ink-dim); font-size:15px; margin-bottom:32px;}
+
+  form{display:flex; flex-direction:column; gap:12px;}
+  .field-row{display:flex; gap:12px;}
+  .field-row .field-group{flex:1;}
+  label{display:block; font-size:13px; font-weight:600; color:var(--ink-dim); margin-bottom:6px;}
+  input{
+    width:100%; background:#fff; border:1px solid var(--line);
+    color:var(--ink); padding:14px 16px; border-radius:12px;
+    font-size:15px; font-family:'Inter';
+    transition:border-color .15s ease;
+  }
+  input::placeholder{color:var(--ink-faint);}
+  input:focus{border-color:var(--accent-deep); outline:none;}
+
+  .submit-btn{
+    margin-top:10px; width:100%; padding:16px; border:none; border-radius:12px;
+    background:var(--accent); color:var(--ink); font-weight:700; font-size:15px;
+    cursor:pointer; font-family:'Inter';
+    transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+  }
+  .submit-btn:hover{transform:translateY(-1px); box-shadow:0 10px 24px rgba(247,201,72,0.45);}
+  .submit-btn:disabled{opacity:0.6; cursor:not-allowed; transform:none; box-shadow:none;}
+
+  .form-note{font-size:12px; color:var(--ink-faint); margin-top:14px; text-align:center;}
+  .error-box{
+    display:none; background:#fdecea; border:1px solid var(--danger); color:var(--danger);
+    border-radius:12px; padding:12px 14px; font-size:13.5px; margin-bottom:6px;
+  }
+  .error-box.show{display:block;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="back" href="afrilaunch-partenariat.html">← Retour</a>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <span class="eyebrow">Étape 1 sur 2</span>
+    <h1>Crée ton compte Afrilaunch</h1>
+    <p class="lead">Quelques infos, puis tu passes au paiement pour débloquer ton accès complet.</p>
+
+    <div class="error-box" id="errorBox"></div>
+
+    <form id="signupForm">
+      <div class="field-row">
+        <div class="field-group">
+          <label for="firstName">Prénom</label>
+          <input id="firstName" type="text" placeholder="Ton prénom" required>
+        </div>
+        <div class="field-group">
+          <label for="lastName">Nom</label>
+          <input id="lastName" type="text" placeholder="Ton nom" required>
+        </div>
+      </div>
+      <div class="field-group">
+        <label for="email">Email</label>
+        <input id="email" type="email" placeholder="ton@email.com" required>
+      </div>
+      <div class="field-group">
+        <label for="phone">Téléphone (WhatsApp)</label>
+        <input id="phone" type="tel" placeholder="+225 07 00 00 00 00" required>
+      </div>
+      <div class="field-group">
+        <label for="password">Mot de passe</label>
+        <input id="password" type="password" placeholder="8 caractères minimum" minlength="8" required>
+      </div>
+
+      <button class="submit-btn" type="submit" id="submitBtn">Continuer vers le paiement</button>
+      <p class="form-note">En continuant, tu acceptes nos conditions d'utilisation.</p>
+    </form>
+  </div>
+</main>
+
+<!-- Client Supabase — remplace les deux valeurs ci-dessous par celles de ton projet -->
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+  const SUPABASE_URL = 'https://khvjgmrohqnxmfoyryoq.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtodmpnbXJvaHFueG1mb3lyeW9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNzU4MjUsImV4cCI6MjEwMDg1MTgyNX0.NkcbaYaYYXyPyGDWmB3t3AxgG4t-JO71fKg4v8vMxg4';
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // URL de la fonction create-payment une fois déployée (voir supabase/functions/create-payment)
+  const CREATE_PAYMENT_URL = SUPABASE_URL + '/functions/v1/create-payment';
+
+  const form = document.getElementById('signupForm');
+  const submitBtn = document.getElementById('submitBtn');
+  const errorBox = document.getElementById('errorBox');
+
+  function showError(message) {
+    errorBox.textContent = message;
+    errorBox.classList.add('show');
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorBox.classList.remove('show');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Création du compte...';
+
+    const firstName = document.getElementById('firstName').value.trim();
+    const lastName = document.getElementById('lastName').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const password = document.getElementById('password').value;
+
+    // 1. Création du compte Supabase — le compte existe chez nous avant tout contact avec Chariow
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { first_name: firstName, last_name: lastName, phone },
+      },
+    });
+
+    if (signUpError) {
+      showError(signUpError.message === 'User already registered'
+        ? 'Un compte existe déjà avec cet email.'
+        : "Erreur lors de la création du compte : " + signUpError.message);
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Continuer vers le paiement';
+      return;
+    }
+
+    // 2. Appel à notre propre fonction, qui génère la session de paiement Chariow en coulisses
+    submitBtn.textContent = 'Préparation du paiement...';
+    try {
+      const res = await fetch(CREATE_PAYMENT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${signUpData.session?.access_token ?? SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ email, firstName, lastName, phone }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.checkoutUrl) {
+        throw new Error(data.error || 'Réponse invalide du serveur de paiement.');
+      }
+
+      // 3. Redirection vers la page de paiement Chariow générée pour cette vente.
+      // Chariow retrouvera ce compte par email (déjà créé) au moment du paiement —
+      // c'est le webhook global existant côté Afrilaunch qui confirmera le paiement
+      // et débloquera l'accès, exactement comme pour l'autre produit.
+      window.location.href = data.checkoutUrl;
+    } catch (err) {
+      showError("Ton compte est créé, mais la redirection vers le paiement a échoué : " + err.message + ". Contacte-nous sur WhatsApp pour finaliser.");
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Continuer vers le paiement';
+    }
+  });
+</script>
+
+</body>
+</html>
