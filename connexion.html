@@ -42,13 +42,15 @@
 
   form{display:flex; flex-direction:column; gap:12px;}
   label{display:block; font-size:13px; font-weight:600; color:var(--ink-dim); margin-bottom:6px;}
-  input{
+  input, select{
     width:100%; background:#fff; border:1px solid var(--line);
     color:var(--ink); padding:14px 16px; border-radius:12px;
     font-size:15px; font-family:'Inter';
     transition:border-color .15s ease;
   }
+  select{cursor:pointer;}
   input::placeholder{color:var(--ink-faint);}
+  select:invalid{color:var(--ink-faint);}
   input:focus{border-color:var(--accent-deep); outline:none;}
 
   .submit-btn{
