@@ -133,6 +133,21 @@
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtodmpnbXJvaHFueG1mb3lyeW9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNzU4MjUsImV4cCI6MjEwMDg1MTgyNX0.NkcbaYaYYXyPyGDWmB3t3AxgG4t-JO71fKg4v8vMxg4';
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+  // Pré-sélection automatique du pays via géolocalisation IP — la personne garde la main
+  // pour corriger si la détection se trompe (VPN, etc.).
+  (async () => {
+    try {
+      const res = await fetch('https://ipapi.co/json/');
+      const geo = await res.json();
+      const countrySelect = document.getElementById('country');
+      if (geo?.country_code && countrySelect.querySelector(`option[value="${geo.country_code}"]`)) {
+        countrySelect.value = geo.country_code;
+      }
+    } catch {
+      // Échec silencieux : la personne choisit son pays manuellement, comme avant.
+    }
+  })();
+
   const CREATE_PAYMENT_URL = SUPABASE_URL + '/functions/v1/create-payment';
 
   const form = document.getElementById('loginForm');
