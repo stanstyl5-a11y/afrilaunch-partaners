@@ -15,7 +15,7 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 const CHARIOW_API_KEY = Deno.env.get("CHARIOW_API_KEY")!;
 
-const CHARIOW_PRODUCT_ID = "prd_vgbudta4"; // Offre "caviar" Afrilaunch — 10 500 FCFA
+const CHARIOW_PRODUCT_ID = "prd_zd8ds0r3"; // Offre "caviar" Afrilaunch — 10 500 FCFA (recréé avec le bon type de produit)
 
 // À ADAPTER : URL vers laquelle Chariow renvoie le client après paiement.
 const REDIRECT_URL = "https://votre-domaine.com/merci.html";
