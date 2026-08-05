@@ -93,6 +93,20 @@
         <label for="password">Mot de passe</label>
         <input id="password" type="password" placeholder="Ton mot de passe" required>
       </div>
+      <div class="field-group">
+        <label for="country">Pays (pour le paiement)</label>
+        <select id="country" required>
+          <option value="">Choisissez...</option>
+          <option value="CI">Côte d'Ivoire</option>
+          <option value="BF">Burkina Faso</option>
+          <option value="SN">Sénégal</option>
+          <option value="ML">Mali</option>
+          <option value="BJ">Bénin</option>
+          <option value="TG">Togo</option>
+          <option value="CM">Cameroun</option>
+          <option value="FR">France</option>
+        </select>
+      </div>
 
       <button class="submit-btn" type="submit" id="submitBtn">Continuer vers le paiement</button>
     </form>
@@ -128,6 +142,7 @@
 
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
+    const country = document.getElementById('country').value;
 
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email,
@@ -157,6 +172,7 @@
           firstName: meta.first_name || '',
           lastName: meta.last_name || '',
           phone: meta.phone || '',
+          country,
         }),
       });
 

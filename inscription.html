@@ -101,9 +101,25 @@
         <label for="email">Email</label>
         <input id="email" type="email" placeholder="ton@email.com" required>
       </div>
-      <div class="field-group">
-        <label for="phone">Téléphone (WhatsApp)</label>
-        <input id="phone" type="tel" placeholder="+225 07 00 00 00 00" required>
+      <div class="field-row">
+        <div class="field-group">
+          <label for="phone">Téléphone (WhatsApp)</label>
+          <input id="phone" type="tel" placeholder="07 00 00 00 00" required>
+        </div>
+        <div class="field-group">
+          <label for="country">Pays</label>
+          <select id="country" required>
+            <option value="">Choisissez...</option>
+            <option value="CI">Côte d'Ivoire</option>
+            <option value="BF">Burkina Faso</option>
+            <option value="SN">Sénégal</option>
+            <option value="ML">Mali</option>
+            <option value="BJ">Bénin</option>
+            <option value="TG">Togo</option>
+            <option value="CM">Cameroun</option>
+            <option value="FR">France</option>
+          </select>
+        </div>
       </div>
       <div class="field-group">
         <label for="password">Mot de passe</label>
@@ -148,6 +164,7 @@
     const lastName = document.getElementById('lastName').value.trim();
     const email = document.getElementById('email').value.trim();
     const phone = document.getElementById('phone').value.trim();
+    const country = document.getElementById('country').value;
     const password = document.getElementById('password').value;
 
     // 1. Création du compte Supabase — le compte existe chez nous avant tout contact avec Chariow
@@ -155,7 +172,7 @@
       email,
       password,
       options: {
-        data: { first_name: firstName, last_name: lastName, phone },
+        data: { first_name: firstName, last_name: lastName, phone, country },
       },
     });
 
@@ -177,7 +194,7 @@
           'Content-Type': 'application/json',
           Authorization: `Bearer ${signUpData.session?.access_token ?? SUPABASE_ANON_KEY}`,
         },
-        body: JSON.stringify({ email, firstName, lastName, phone }),
+        body: JSON.stringify({ email, firstName, lastName, phone, country }),
       });
 
       const data = await res.json();

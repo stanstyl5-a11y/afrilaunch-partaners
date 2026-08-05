@@ -58,11 +58,17 @@ Deno.serve(async (req) => {
     });
   }
 
-  const { email, firstName, lastName, phone } = await req.json();
+  const { email, firstName, lastName, phone, country } = await req.json();
 
-  // Sépare le numéro de téléphone brut (ex: "+225 07 00 00 00 00") en chiffres seuls.
+  if (!country) {
+    return new Response(JSON.stringify({ error: "Pays manquant — impossible de valider le numéro de téléphone." }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  // Sépare le numéro de téléphone brut (ex: "07 00 00 00 00") en chiffres seuls.
   const digitsOnly = String(phone).replace(/[^\d]/g, "");
-  const PHONE_COUNTRY_CODE = "CI"; // Côte d'Ivoire par défaut — ajuster si audience différente
 
   const chariowRes = await fetch("https://api.chariow.com/v1/checkout", {
     method: "POST",
@@ -75,7 +81,7 @@ Deno.serve(async (req) => {
       email,
       first_name: firstName,
       last_name: lastName,
-      phone: { number: digitsOnly, country_code: PHONE_COUNTRY_CODE },
+      phone: { number: digitsOnly, country_code: country },
       redirect_url: REDIRECT_URL,
     }),
   });
