@@ -1,4 +1,3 @@
-// trigger redeploy v2
 // Edge Function : appelée par inscription.html juste après la création du compte Supabase.
 // Rôle : générer une session de paiement Chariow spécifique à cette vente, et renvoyer
 // l'URL de checkout au front-end pour redirection.
@@ -21,9 +20,26 @@ const CHARIOW_PRODUCT_ID = "prd_vgbudta4"; // Offre "caviar" Afrilaunch — 10 5
 // À ADAPTER : URL vers laquelle Chariow renvoie le client après paiement.
 const REDIRECT_URL = "https://votre-domaine.com/merci.html";
 
+// CORS : nécessaire pour que le navigateur autorise l'appel depuis inscription.html
+// (que ce soit en local via file:// ou depuis ton domaine une fois en ligne).
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
 Deno.serve(async (req) => {
+  // Le navigateur envoie d'abord une requête OPTIONS ("preflight") avant le vrai POST —
+  // sans cette réponse, le fetch échoue silencieusement avec "Failed to fetch".
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405 });
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   // Vérifie que l'appel vient bien d'un utilisateur qui vient de créer son compte
@@ -38,6 +54,7 @@ Deno.serve(async (req) => {
   if (userError || !userData?.user) {
     return new Response(JSON.stringify({ error: "Session invalide, reconnecte-toi." }), {
       status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 
@@ -68,7 +85,7 @@ Deno.serve(async (req) => {
   if (!chariowRes.ok) {
     return new Response(
       JSON.stringify({ error: chariowData?.message ?? "Erreur lors de la création du paiement Chariow." }),
-      { status: 502 },
+      { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 
@@ -76,9 +93,12 @@ Deno.serve(async (req) => {
   if (!checkoutUrl) {
     return new Response(
       JSON.stringify({ error: "Réponse Chariow inattendue : pas d'URL de paiement." }),
-      { status: 502 },
+      { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 
-  return new Response(JSON.stringify({ checkoutUrl }), { status: 200 });
+  return new Response(JSON.stringify({ checkoutUrl }), {
+    status: 200,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
 });
