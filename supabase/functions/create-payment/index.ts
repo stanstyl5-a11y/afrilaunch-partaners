@@ -58,17 +58,39 @@ Deno.serve(async (req) => {
     });
   }
 
-  const { email, firstName, lastName, phone, country } = await req.json();
+  const { email, firstName, lastName, phone } = await req.json();
 
-  if (!country) {
-    return new Response(JSON.stringify({ error: "Pays manquant — impossible de valider le numéro de téléphone." }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  // Déduit le pays depuis l'indicatif d'appel du numéro — chaque indicatif est unique
+  // parmi les pays de la zone Franc CFA que couvre Afrilaunch, donc pas d'ambiguïté possible.
+  const CALLING_CODE_TO_COUNTRY: Record<string, string> = {
+    "229": "BJ", // Bénin
+    "226": "BF", // Burkina Faso
+    "237": "CM", // Cameroun
+    "236": "CF", // Centrafrique
+    "242": "CG", // Congo
+    "225": "CI", // Côte d'Ivoire
+    "241": "GA", // Gabon
+    "240": "GQ", // Guinée Équatoriale
+    "245": "GW", // Guinée-Bissau
+    "223": "ML", // Mali
+    "227": "NE", // Niger
+    "221": "SN", // Sénégal
+    "235": "TD", // Tchad
+    "228": "TG", // Togo
+  };
+
+  const digitsWithCode = String(phone).replace(/[^\d]/g, "");
+  const callingCode = Object.keys(CALLING_CODE_TO_COUNTRY).find((code) => digitsWithCode.startsWith(code));
+
+  if (!callingCode) {
+    return new Response(
+      JSON.stringify({ error: "Indicatif de pays introuvable dans le numéro. Fais-le commencer par ton indicatif (ex: +225, +226...)." }),
+      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   }
 
-  // Sépare le numéro de téléphone brut (ex: "07 00 00 00 00") en chiffres seuls.
-  const digitsOnly = String(phone).replace(/[^\d]/g, "");
+  const country = CALLING_CODE_TO_COUNTRY[callingCode];
+  const digitsOnly = digitsWithCode.slice(callingCode.length);
 
   const chariowRes = await fetch("https://api.chariow.com/v1/checkout", {
     method: "POST",

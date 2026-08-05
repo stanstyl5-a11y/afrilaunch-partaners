@@ -42,17 +42,13 @@
 
   form{display:flex; flex-direction:column; gap:12px;}
   label{display:block; font-size:13px; font-weight:600; color:var(--ink-dim); margin-bottom:6px;}
-  input, select{
+  input{
     width:100%; background:#fff; border:1px solid var(--line);
     color:var(--ink); padding:14px 16px; border-radius:12px;
     font-size:15px; font-family:'Inter';
     transition:border-color .15s ease;
   }
-  select{cursor:pointer;}
   input::placeholder{color:var(--ink-faint);}
-  select:invalid{color:var(--ink-faint);}
-  select option{color:var(--ink);}
-  select option[value=""]{color:var(--ink-faint);}
   input:focus{border-color:var(--accent-deep); outline:none;}
 
   .submit-btn{
@@ -98,24 +94,9 @@
         <input id="password" type="password" placeholder="Ton mot de passe" required>
       </div>
       <div class="field-group">
-        <label for="country">Pays (pour le paiement)</label>
-        <select id="country" required>
-          <option value="">Choisissez...</option>
-          <option value="BJ">Bénin</option>
-          <option value="BF">Burkina Faso</option>
-          <option value="CM">Cameroun</option>
-          <option value="CF">Centrafrique</option>
-          <option value="CG">Congo</option>
-          <option value="CI">Côte d'Ivoire</option>
-          <option value="GA">Gabon</option>
-          <option value="GQ">Guinée Équatoriale</option>
-          <option value="GW">Guinée-Bissau</option>
-          <option value="ML">Mali</option>
-          <option value="NE">Niger</option>
-          <option value="SN">Sénégal</option>
-          <option value="TD">Tchad</option>
-          <option value="TG">Togo</option>
-        </select>
+        <label for="phone">Téléphone (WhatsApp)</label>
+        <input id="phone" type="tel" placeholder="+225 07 00 00 00 00" required>
+        <p class="form-note" style="text-align:left; margin-top:6px;">Indique l'indicatif de ton pays (ex: +225, +226...).</p>
       </div>
 
       <button class="submit-btn" type="submit" id="submitBtn">Continuer vers le paiement</button>
@@ -132,21 +113,6 @@
   const SUPABASE_URL = 'https://khvjgmrohqnxmfoyryoq.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtodmpnbXJvaHFueG1mb3lyeW9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNzU4MjUsImV4cCI6MjEwMDg1MTgyNX0.NkcbaYaYYXyPyGDWmB3t3AxgG4t-JO71fKg4v8vMxg4';
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  // Pré-sélection automatique du pays via géolocalisation IP — la personne garde la main
-  // pour corriger si la détection se trompe (VPN, etc.).
-  (async () => {
-    try {
-      const res = await fetch('https://ipapi.co/json/');
-      const geo = await res.json();
-      const countrySelect = document.getElementById('country');
-      if (geo?.country_code && countrySelect.querySelector(`option[value="${geo.country_code}"]`)) {
-        countrySelect.value = geo.country_code;
-      }
-    } catch {
-      // Échec silencieux : la personne choisit son pays manuellement, comme avant.
-    }
-  })();
 
   const CREATE_PAYMENT_URL = SUPABASE_URL + '/functions/v1/create-payment';
 
@@ -167,7 +133,7 @@
 
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
-    const country = document.getElementById('country').value;
+    const phone = document.getElementById('phone').value.trim();
 
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email,
@@ -196,8 +162,7 @@
           email: user.email,
           firstName: meta.first_name || '',
           lastName: meta.last_name || '',
-          phone: meta.phone || '',
-          country,
+          phone,
         }),
       });
 
