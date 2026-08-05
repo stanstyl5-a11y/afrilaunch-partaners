@@ -1,3 +1,4 @@
+// trigger redeploy
 // Edge Function : appelée par inscription.html juste après la création du compte Supabase.
 // Rôle : générer une session de paiement Chariow spécifique à cette vente, et renvoyer
 // l'URL de checkout au front-end pour redirection.
