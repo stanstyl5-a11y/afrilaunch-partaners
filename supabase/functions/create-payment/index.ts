@@ -125,6 +125,31 @@ Deno.serve(async (req) => {
     );
   }
 
+  // Crée la ligne "payments" en attente dès maintenant, avec reference = l'id de vente
+  // renvoyé par Chariow — c'est exactement ce que le webhook existant (chariow-webhook)
+  // s'attend à trouver via payments.reference quand la confirmation arrivera, au lieu de
+  // passer par son chemin de secours "référence inconnue".
+  const purchase = chariowData?.data?.purchase;
+  if (purchase?.id) {
+    const adminClient = createClient(
+      supabaseUrl,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const { error: insertError } = await adminClient.from("payments").insert({
+      user_id: userData.user.id,
+      reference: purchase.id,
+      amount: purchase.amount?.value ?? 0,
+      currency: purchase.amount?.currency ?? "XOF",
+      status: "pending",
+      product_id: CHARIOW_PRODUCT_ID,
+    });
+    if (insertError) {
+      // On ne bloque pas le paiement pour ça — le webhook a un chemin de secours qui
+      // fonctionne même sans cette ligne pré-créée (voir audit). On log juste pour suivi.
+      console.error("Échec insertion payments (non bloquant):", insertError.message);
+    }
+  }
+
   return new Response(JSON.stringify({ checkoutUrl }), {
     status: 200,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
