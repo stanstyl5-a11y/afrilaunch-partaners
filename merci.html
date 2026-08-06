@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Merci — Afrilaunch Partners</title>
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ffffff;
+    --bg-alt:#f7f4ee;
+    --line:#e9e4d9;
+    --ink:#221f1a;
+    --ink-dim:#6a6459;
+    --ink-faint:#a49c8d;
+    --accent:#f7c948;
+    --accent-deep:#e2a900;
+    --radius:18px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg); color:var(--ink); font-family:'Inter', sans-serif; line-height:1.55;
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+  }
+  h1{font-family:'Fraunces', serif; font-weight:500; line-height:1.15; letter-spacing:-0.01em;}
+  .wrap{max-width:440px; margin:0 auto; padding:40px 24px; text-align:center;}
+
+  .spinner{
+    width:56px; height:56px; margin:0 auto 28px;
+    border:4px solid var(--line); border-top-color:var(--accent-deep);
+    border-radius:50%; animation:spin 0.9s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @media (prefers-reduced-motion: reduce){.spinner{animation-duration:2.5s;}}
+
+  .eyebrow{
+    color:var(--accent-deep); font-size:13px; font-weight:700; text-transform:uppercase;
+    letter-spacing:0.04em; margin-bottom:14px; display:block;
+  }
+  h1{font-size:clamp(24px,4vw,30px); margin-bottom:14px;}
+  .status-msg{color:var(--ink-dim); font-size:15px; min-height:44px;}
+  .note{font-size:12.5px; color:var(--ink-faint); margin-top:28px;}
+  .note a{color:var(--accent-deep); font-weight:600;}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="spinner" aria-hidden="true"></div>
+  <span class="eyebrow">Paiement reçu</span>
+  <h1>Merci pour ton achat !</h1>
+  <p class="status-msg" id="statusMsg">Vérification de ton paiement...</p>
+  <p class="note" id="waNote" style="display:none;">
+    Ça prend un peu plus de temps que d'habitude, mais pas d'inquiétude — dès que c'est confirmé, tu seras redirigé automatiquement.
+  </p>
+</div>
+
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+  const SUPABASE_URL = 'https://khvjgmrohqnxmfoyryoq.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtodmpnbXJvaHFueG1mb3lyeW9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyNzU4MjUsImV4cCI6MjEwMDg1MTgyNX0.NkcbaYaYYXyPyGDWmB3t3AxgG4t-JO71fKg4v8vMxg4';
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const CREATE_PAYMENT_URL = SUPABASE_URL + '/functions/v1/create-payment';
+  const PLATFORM_URL = 'https://afrilaunch.space/formation.html';
+
+  const statusMsg = document.getElementById('statusMsg');
+  const waNote = document.getElementById('waNote');
+  const startedAt = Date.now();
+  let redirected = false;
+
+  function updateMessage() {
+    const elapsed = Date.now() - startedAt;
+    if (elapsed < 12000) {
+      statusMsg.textContent = 'Vérification de ton paiement...';
+    } else if (elapsed < 40000) {
+      statusMsg.textContent = 'Paiement confirmé ! Activation de ton accès en cours...';
+    } else {
+      statusMsg.textContent = 'Encore un instant, ton accès est en cours d\'activation...';
+      waNote.style.display = 'block';
+    }
+  }
+
+  async function checkAccess() {
+    if (redirected) return;
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      // Pas de session locale (ex: paiement finalisé sur un autre appareil) —
+      // on ne peut pas vérifier automatiquement, on laisse le message rassurant tourner.
+      return;
+    }
+
+    try {
+      const res = await fetch(CREATE_PAYMENT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (data.alreadyPaid) {
+        redirected = true;
+        statusMsg.textContent = 'Accès activé ! Redirection...';
+        waNote.style.display = 'none';
+        window.location.href = PLATFORM_URL;
+      }
+    } catch (err) {
+      // On ignore silencieusement — la page continue de vérifier au prochain intervalle,
+      // aucun message d'erreur n'est montré au client en attente.
+    }
+  }
+
+  updateMessage();
+  checkAccess();
+  setInterval(updateMessage, 4000);
+  setInterval(checkAccess, 4000);
+</script>
+
+</body>
+</html>
