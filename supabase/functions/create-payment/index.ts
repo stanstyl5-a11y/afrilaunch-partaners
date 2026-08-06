@@ -58,6 +58,28 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Client admin (clé service) — utilisé pour tout accès à "payments" dans cette fonction.
+  // On l'utilise aussi pour la vérification "déjà payé" ci-dessous : une lecture avec la
+  // clé anonyme dépendrait des règles RLS de la table, qui peuvent bloquer silencieusement
+  // la lecture même quand la ligne existe. La clé service contourne ça, comme le webhook.
+  const adminClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+  const CAVIAR_PRODUCT_IDS = ["prd_zd8ds0r3", "prd_vgbudta4", "prd_qotgnzgn"];
+  const { data: existingPayments } = await adminClient
+    .from("payments")
+    .select("id")
+    .eq("user_id", userData.user.id)
+    .eq("status", "completed")
+    .in("product_id", CAVIAR_PRODUCT_IDS)
+    .limit(1);
+
+  if (existingPayments && existingPayments.length > 0) {
+    return new Response(JSON.stringify({ alreadyPaid: true }), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   const { email, firstName, lastName, phone } = await req.json();
 
   // Déduit le pays depuis l'indicatif d'appel du numéro — chaque indicatif est unique
@@ -131,10 +153,6 @@ Deno.serve(async (req) => {
   // passer par son chemin de secours "référence inconnue".
   const purchase = chariowData?.data?.purchase;
   if (purchase?.id) {
-    const adminClient = createClient(
-      supabaseUrl,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
     const { error: insertError } = await adminClient.from("payments").insert({
       user_id: userData.user.id,
       reference: purchase.id,

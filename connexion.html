@@ -170,23 +170,10 @@
     const user = signInData.user;
     const meta = user.user_metadata || {};
 
-    // Vérifie si ce compte a déjà l'accès caviar (peu importe lequel des deux produits
-    // l'a débloqué) — si oui, inutile de repasser par Chariow, direction la plateforme.
-    const CAVIAR_PRODUCT_IDS = ['prd_zd8ds0r3', 'prd_vgbudta4', 'prd_qotgnzgn'];
-    const { data: existingPayments } = await supabase
-      .from('payments')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('status', 'completed')
-      .in('product_id', CAVIAR_PRODUCT_IDS)
-      .limit(1);
-
-    if (existingPayments && existingPayments.length > 0) {
-      window.location.href = 'https://afrilaunch.space/formation.html';
-      return;
-    }
-
-    submitBtn.textContent = 'Préparation du paiement...';
+    // La vérification "a-t-il déjà payé ?" se fait côté serveur (create-payment, clé
+    // service) plutôt qu'ici avec la clé anonyme — les règles RLS sur "payments"
+    // pourraient sinon bloquer silencieusement la lecture même si la ligne existe.
+    submitBtn.textContent = 'Vérification de ton accès...';
     try {
       const res = await fetch(CREATE_PAYMENT_URL, {
         method: 'POST',
@@ -203,6 +190,12 @@
       });
 
       const data = await res.json();
+
+      if (data.alreadyPaid) {
+        window.location.href = 'https://afrilaunch.space/formation.html';
+        return;
+      }
+
       if (!res.ok || !data.checkoutUrl) {
         throw new Error(data.error || 'Réponse invalide du serveur de paiement.');
       }
