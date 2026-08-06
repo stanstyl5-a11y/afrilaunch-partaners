@@ -49,14 +49,14 @@
     color:var(--ink); padding:14px 16px; border-radius:12px;
     font-size:15px; font-family:'Inter';
     transition:border-color .15s ease;
-    caret-color:var(--accent-deep);
+    caret-color:var(--ink);
   }
   input::placeholder{color:var(--ink-faint);}
   input:focus{border-color:var(--accent-deep); outline:none;}
   .input-wrap{position:relative;}
   .fake-caret{
     position:absolute; left:17px; top:50%; transform:translateY(-50%);
-    width:2px; height:18px; background:var(--accent-deep);
+    width:2px; height:18px; background:var(--ink);
     animation:blink-caret 1s step-end infinite;
     pointer-events:none;
   }
