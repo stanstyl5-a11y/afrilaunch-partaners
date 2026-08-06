@@ -17,8 +17,8 @@ const CHARIOW_API_KEY = Deno.env.get("CHARIOW_API_KEY")!;
 
 const CHARIOW_PRODUCT_ID = "prd_zd8ds0r3"; // Offre "caviar" Afrilaunch — 10 500 FCFA (recréé avec le bon type de produit)
 
-// À ADAPTER : URL vers laquelle Chariow renvoie le client après paiement.
-const REDIRECT_URL = "https://votre-domaine.com/merci.html";
+// URL vers laquelle Chariow renvoie le client après paiement.
+const REDIRECT_URL = "https://afrilaunch-partenariat.vercel.app/merci.html";
 
 // CORS : nécessaire pour que le navigateur autorise l'appel depuis inscription.html
 // (que ce soit en local via file:// ou depuis ton domaine une fois en ligne).
