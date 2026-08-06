@@ -51,6 +51,16 @@
   }
   input::placeholder{color:var(--ink-faint);}
   input:focus{border-color:var(--accent-deep); outline:none;}
+  .input-wrap{position:relative;}
+  .fake-caret{
+    position:absolute; left:17px; top:50%; transform:translateY(-50%);
+    width:2px; height:18px; background:var(--accent-deep);
+    animation:blink-caret 1s step-end infinite;
+    pointer-events:none;
+  }
+  input:not(:placeholder-shown) ~ .fake-caret, input:focus ~ .fake-caret{display:none;}
+  @keyframes blink-caret{50%{opacity:0;}}
+  @media (prefers-reduced-motion: reduce){.fake-caret{animation:none; opacity:0.6;}}
 
   .submit-btn{
     margin-top:10px; width:100%; padding:16px; border:none; border-radius:12px;
@@ -88,15 +98,24 @@
     <form id="loginForm">
       <div class="field-group">
         <label for="email">Email</label>
-        <input id="email" type="email" placeholder="ton@email.com" required>
+        <div class="input-wrap">
+          <input id="email" type="email" placeholder="ton@email.com" required>
+          <span class="fake-caret" aria-hidden="true"></span>
+        </div>
       </div>
       <div class="field-group">
         <label for="password">Mot de passe</label>
-        <input id="password" type="password" placeholder="Ton mot de passe" required>
+        <div class="input-wrap">
+          <input id="password" type="password" placeholder="Ton mot de passe" required>
+          <span class="fake-caret" aria-hidden="true"></span>
+        </div>
       </div>
       <div class="field-group">
         <label for="phone">Téléphone (WhatsApp)</label>
-        <input id="phone" type="tel" placeholder="+225 07 00 00 00 00" required>
+        <div class="input-wrap">
+          <input id="phone" type="tel" placeholder="+225 07 00 00 00 00" required>
+          <span class="fake-caret" aria-hidden="true"></span>
+        </div>
         <p class="form-note" style="text-align:left; margin-top:6px;">Indique l'indicatif de ton pays (ex: +225, +226...).</p>
       </div>
 
