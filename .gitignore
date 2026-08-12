@@ -1,0 +1,24 @@
+# Vercel
+.vercel
+
+# Fichiers d'environnement — NE JAMAIS COMMITER CES FICHIERS
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+.env.*.local
+*.env
+
+# Clés et secrets
+*.pem
+*.key
+secrets/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
