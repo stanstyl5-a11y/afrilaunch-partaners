@@ -770,7 +770,17 @@
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (error || !data || data.length === 0) {
+      if (error) {
+        if (error.code === 'PGRST301' || error.message.includes('404') || error.message.includes('find') || error.message.includes('relation') || error.code === '42P01') {
+          const alert = document.getElementById('panne-alert');
+          document.getElementById('panne-msg').innerHTML = '⚠️ <strong>ACTION REQUISE :</strong> La table <code>tunnel_events</code> n\'a pas encore été créée dans Supabase. Exécutez le code SQL dans votre console Supabase pour activer le suivi en direct.';
+          alert.classList.add('visible');
+          list.innerHTML = '<div class="empty-state" style="color:#FF4444;">⚠️ La table <b>tunnel_events</b> n\'a pas encore été créée dans votre projet Supabase.<br><br>Suivez les étapes ci-dessous pour coller la requête SQL et activer le tableau de bord.</div>';
+          return;
+        }
+      }
+
+      if (!data || data.length === 0) {
         list.innerHTML = '<div class="empty-state">📭 Aucun événement enregistré pour le moment.<br>Les données apparaîtront dès que des visiteurs arrivent sur le tunnel.</div>';
         return;
       }
