@@ -2,10 +2,10 @@
 // Rôle : générer une session de paiement Chariow spécifique à cette vente, et renvoyer
 // l'URL de checkout au front-end pour redirection.
 //
-// C'est la SEULE pièce qu'on reconstruit pour ce produit — la confirmation de paiement et
-// l'octroi d'accès restent gérés par le webhook global existant côté Afrilaunch (celui qui
-// tourne déjà pour prd_i5ug6m), qui s'applique à tous les produits Chariow. Cette fonction
-// ne fait que déclencher le paiement ; elle ne crée aucun accès elle-même.
+// Sécurité renforcée (audit 2026-08-12) :
+//  1. CORS restreint aux domaines Afrilaunch (plus de wildcard *)
+//  2. Validation stricte des entrées utilisateur côté serveur
+//  3. Rate limiting : 1 tentative max par 5 minutes par utilisateur
 //
 // Basé sur la doc officielle : https://chariow.dev/api-reference/checkout/init-checkout
 
@@ -15,22 +15,67 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 const CHARIOW_API_KEY = Deno.env.get("CHARIOW_API_KEY")!;
 
-const CHARIOW_PRODUCT_ID = "prd_zd8ds0r3"; // Offre "caviar" Afrilaunch — 10 500 FCFA (recréé avec le bon type de produit)
+const CHARIOW_PRODUCT_ID = "prd_zd8ds0r3"; // Offre "caviar" Afrilaunch — 10 500 FCFA
 
 // URL vers laquelle Chariow renvoie le client après paiement.
 const REDIRECT_URL = "https://afrilaunch-partenariat.vercel.app/merci.html";
 
-// CORS : nécessaire pour que le navigateur autorise l'appel depuis inscription.html
-// (que ce soit en local via file:// ou depuis ton domaine une fois en ligne).
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+// =============================================================
+// CORRECTIF 1 — CORS restreint aux domaines Afrilaunch uniquement
+// =============================================================
+const ALLOWED_ORIGINS = [
+  "https://afrilaunch-partenariat.vercel.app",
+  "https://afrilaunch.space",
+  "https://www.afrilaunch.space",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+];
+
+function getCorsHeaders(requestOrigin: string | null): Record<string, string> {
+  const origin = requestOrigin ?? "";
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin)
+    ? origin
+    : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+  };
+}
+
+// =============================================================
+// CORRECTIF 2 — Validation stricte des entrées utilisateur
+// =============================================================
+function validateInputs(body: unknown): {
+  valid: boolean; error?: string;
+  data?: { email: string; firstName: string; lastName: string; phone: string };
+} {
+  if (!body || typeof body !== "object") {
+    return { valid: false, error: "Corps de requête invalide." };
+  }
+  const raw = body as Record<string, unknown>;
+  const email = String(raw.email ?? "").trim().toLowerCase();
+  const firstName = String(raw.firstName ?? "").trim().slice(0, 100);
+  const lastName = String(raw.lastName ?? "").trim().slice(0, 100);
+  const phone = String(raw.phone ?? "").trim().slice(0, 30);
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) return { valid: false, error: "Adresse email invalide." };
+
+  const phoneDigits = phone.replace(/[^\d]/g, "");
+  if (phoneDigits.length < 8 || phoneDigits.length > 15) {
+    return { valid: false, error: "Numéro de téléphone invalide. Inclus ton indicatif (ex: +225...)." };
+  }
+  if (firstName.length === 0) return { valid: false, error: "Le prénom est requis." };
+  if (lastName.length === 0) return { valid: false, error: "Le nom est requis." };
+
+  return { valid: true, data: { email, firstName, lastName, phone } };
+}
 
 Deno.serve(async (req) => {
-  // Le navigateur envoie d'abord une requête OPTIONS ("preflight") avant le vrai POST —
-  // sans cette réponse, le fetch échoue silencieusement avec "Failed to fetch".
+  const requestOrigin = req.headers.get("Origin");
+  const corsHeaders = getCorsHeaders(requestOrigin);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -42,7 +87,6 @@ Deno.serve(async (req) => {
     });
   }
 
-  // Vérifie que l'appel vient bien d'un utilisateur qui vient de créer son compte
   const authHeader = req.headers.get("Authorization") ?? "";
   const accessToken = authHeader.replace("Bearer ", "");
 
@@ -80,10 +124,47 @@ Deno.serve(async (req) => {
     });
   }
 
-  const { email, firstName, lastName, phone } = await req.json();
+  // =============================================================
+  // CORRECTIF 3 — Rate Limiting : 1 tentative max par 5 minutes
+  // =============================================================
+  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+  const { data: recentAttempts } = await adminClient
+    .from("payments")
+    .select("created_at")
+    .eq("user_id", userData.user.id)
+    .eq("status", "pending")
+    .gt("created_at", fiveMinutesAgo)
+    .limit(1);
 
-  // Déduit le pays depuis l'indicatif d'appel du numéro — chaque indicatif est unique
-  // parmi les pays de la zone Franc CFA que couvre Afrilaunch, donc pas d'ambiguïté possible.
+  if (recentAttempts && recentAttempts.length > 0) {
+    return new Response(
+      JSON.stringify({ error: "Veuillez patienter quelques minutes avant une nouvelle tentative de paiement." }),
+      { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+
+  // Lecture et validation stricte du body
+  let rawBody: unknown;
+  try {
+    rawBody = await req.json();
+  } catch {
+    return new Response(JSON.stringify({ error: "Corps de requête JSON invalide." }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const validation = validateInputs(rawBody);
+  if (!validation.valid || !validation.data) {
+    return new Response(JSON.stringify({ error: validation.error }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const { email, firstName, lastName, phone } = validation.data;
+
+  // Déduit le pays depuis l'indicatif d'appel du numéro
   const CALLING_CODE_TO_COUNTRY: Record<string, string> = {
     "229": "BJ", // Bénin
     "226": "BF", // Burkina Faso
@@ -133,8 +214,9 @@ Deno.serve(async (req) => {
   const chariowData = await chariowRes.json();
 
   if (!chariowRes.ok) {
+    // Message générique — pas de détail interne Chariow exposé au client
     return new Response(
-      JSON.stringify({ error: chariowData?.message ?? "Erreur lors de la création du paiement Chariow." }),
+      JSON.stringify({ error: "Erreur lors de la création du paiement. Réessaie ou contacte le support." }),
       { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
@@ -142,7 +224,7 @@ Deno.serve(async (req) => {
   const checkoutUrl = chariowData?.data?.payment?.checkout_url;
   if (!checkoutUrl) {
     return new Response(
-      JSON.stringify({ error: "Réponse Chariow inattendue : pas d'URL de paiement." }),
+      JSON.stringify({ error: "Réponse de paiement inattendue. Contacte le support." }),
       { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
