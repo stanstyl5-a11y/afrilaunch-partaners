@@ -3389,48 +3389,104 @@
       });
 
       /* ------------------------------------------------------------------------
-         8. CHARGEMENT GLOBAL EN ARRIÈRE-PLAN (PRÉCHARGEMENT INSTANTANÉ)
+         8. CHARGEMENT GLOBAL EN ARRIÈRE-PLAN (PRÉCHARGEMENT EXHAUSTIF)
+         Tout est préchargé dès l'arrivée du visiteur, sans jamais bloquer
+         le rendu de la page. On utilise requestIdleCallback pour s'exécuter
+         uniquement pendant les temps morts du navigateur.
          ------------------------------------------------------------------------ */
       function preloadAllAssetsInBackground() {
-        // A. Préchargement immédiat du formulaire de paiement Chariow
+
+        // ── A. PAIEMENT CHARIOW ──────────────────────────────────────────────
+        // On injecte le src de l'iframe Chariow dès que possible pour que le
+        // formulaire soit déjà chargé quand le visiteur clique sur "Réserver".
         if (chariowIframe && (!chariowIframe.src || chariowIframe.src === window.location.href)) {
           chariowIframe.src = chariowCheckoutUrl;
         }
 
-        // B. Préchargement silencieux des images des carrousels & maquettes iPhone
-        const assetsToPreload = [
+        // ── B. IMAGES LOCALES ────────────────────────────────────────────────
+        const localImages = [
           'images/APERCUES.png',
           'images/APERCUES_1.png',
           'images/APERCUES_2.png',
+          'logo.png',
+          'fondateur.jpg',
+        ];
+        localImages.forEach(url => { const i = new Image(); i.src = url; });
+
+        // ── C. MINIATURES VIMEO (toutes les cartes de tous les carrousels) ───
+        // On lit directement les attributs data-bg présents dans le DOM pour
+        // ne jamais manquer une miniature, même si le carousel évolue.
+        const vimeoBgUrls = new Set();
+        document.querySelectorAll('[data-bg]').forEach(el => {
+          const bg = el.getAttribute('data-bg');
+          if (bg && bg.includes('vimeocdn')) vimeoBgUrls.add(bg);
+        });
+        // On ajoute aussi les miniatures déjà connues des shorts hero
+        [
           'https://i.vimeocdn.com/video/2189114490-a2efc754d92461d368e734ad33161cbf5f36e4f3a3a411beab0611d293d052a2-d_640',
           'https://i.vimeocdn.com/video/2189142340-d76ecc28a7c8c5625fae28422dfea18a0b131322b75030d8454c922dfaf46f3f-d_640',
           'https://i.vimeocdn.com/video/2189154460-a2efc754d92461d368e734ad33161cbf5f36e4f3a3a411beab0611d293d052a2-d_640',
-          'https://i.vimeocdn.com/video/2186310754-db6ce44c7a596f4131614007d51a8312c360ce64bb5f63b522e71b624ce53ea1-d_640',
-          'https://i.vimeocdn.com/video/2186310756-67ba6dbfe1f47d20d9772bac75f016a400b2a18f54736c2c5d9ef73dae0ad311-d_640',
-          'https://i.vimeocdn.com/video/2174462703-491511e2f00f8d5e4d59779821de696e7df264c9d04083fb5e2969a802aeac92-d_640',
-          'https://i.vimeocdn.com/video/2184206928-14f5750e33b992eddec3a2ea2ab703af476db178b3b8b875d4b4450ffe3560bc-d_640',
-          'https://i.vimeocdn.com/video/2174491886-03bd012ccc3427d2ab3f2b6ff0bf8f5fb03089bc557162068a5bde8c323f3583-d_640',
-          'https://i.vimeocdn.com/video/2174472185-023ea59b95de69151d710f8e55ebdec105d4e970c7bb15b2341d618451386c8a-d_640',
-          'https://i.vimeocdn.com/video/2174466422-1d2c1fd953b57e9ec00bf3332cf8b6e709c379633b37a62dd6728871f418c5ec-d_640',
-          'https://i.vimeocdn.com/video/2174464668-6177ea0af4db87ada640d422a68aa40e3e057880e4e5a9793fa0400c1296268c-d_640',
-          'https://i.vimeocdn.com/video/2174459109-b836b58a3a93a7bba1a00dbdddd63d1b8f35a82d4de63e5fdd0d68b6af9e660c-d_640'
-        ];
+        ].forEach(u => vimeoBgUrls.add(u));
 
-        assetsToPreload.forEach(url => {
-          const img = new Image();
-          img.src = url;
+        vimeoBgUrls.forEach(url => { const i = new Image(); i.src = url; });
+
+        // ── D. CONNEXIONS VIMEO PLAYER (résolution DNS + TCP anticipé) ───────
+        // Pour chaque video, on crée un lien de préconnexion dynamique vers
+        // player.vimeo.com afin que la connexion soit déjà établie avant le clic.
+        const vimeoPlayerDomains = [
+          'https://player.vimeo.com',
+          'https://i.vimeocdn.com',
+          'https://f.vimeocdn.com',
+          'https://fresnel.vimeocdn.com',
+          'https://skyfire.vimeo.com',
+        ];
+        vimeoPlayerDomains.forEach(domain => {
+          if (!document.querySelector(`link[href="${domain}"][rel="preconnect"]`)) {
+            const link = document.createElement('link');
+            link.rel = 'preconnect';
+            link.href = domain;
+            link.crossOrigin = 'anonymous';
+            document.head.appendChild(link);
+          }
         });
 
-        // C. Amorce silencieuse des connexions réseau Vimeo
+        // ── E. PREFETCH DES PLAYERS VIMEO (tous les IDs du DOM) ─────────────
+        // Pour chaque vidéo dans le DOM, on envoie une requête silencieuse
+        // vers l'API oEmbed de Vimeo pour récupérer les métadonnées à l'avance.
+        const allVideoIds = new Set();
+        document.querySelectorAll('[data-video-id]').forEach(el => {
+          const id = el.getAttribute('data-video-id');
+          if (id) allVideoIds.add(id);
+        });
+
+        allVideoIds.forEach(id => {
+          // Préchargement de la page player Vimeo (prefetch = chargement basse prio)
+          const link = document.createElement('link');
+          link.rel = 'prefetch';
+          link.href = `https://player.vimeo.com/video/${id}?autoplay=0&muted=1&title=0&byline=0&portrait=0`;
+          link.as = 'document';
+          document.head.appendChild(link);
+        });
+
+        // ── F. AMORCE DES PREVIEWS SHORTS HERO ──────────────────────────────
         if (typeof startShortMutedPreview === 'function') startShortMutedPreview();
         if (typeof startShortMutedPreview2 === 'function') startShortMutedPreview2();
       }
 
-      // Lancement du préchargement dès l'arrivée du visiteur
+      // Lancement : on utilise requestIdleCallback si dispo pour ne jamais
+      // bloquer le premier rendu. Fallback : setTimeout 800ms après le load.
+      function launchPreload() {
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(() => preloadAllAssetsInBackground(), { timeout: 2000 });
+        } else {
+          setTimeout(preloadAllAssetsInBackground, 800);
+        }
+      }
+
       if (document.readyState === 'complete') {
-        preloadAllAssetsInBackground();
+        launchPreload();
       } else {
-        window.addEventListener('load', preloadAllAssetsInBackground);
+        window.addEventListener('load', launchPreload);
       }
 
     });
