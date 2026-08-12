@@ -3567,5 +3567,70 @@
       </div>
     </div>
   </div>
+  <!-- ==========================================================================
+       TRACKER AUTOMATIQUE EN ARRIÈRE-PLAN (DUPLIK MONITORING)
+       ========================================================================== -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script>
+    (function() {
+      const SUPABASE_URL = 'https://zjiugiaqfumzrlyropam.supabase.co';
+      const SUPABASE_KEY = 'sb_publishable_lZ8-8RxMtq3RMLSTZNUwZQ_FdBPTllk';
+
+      let db = null;
+      try {
+        if (window.supabase) {
+          db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        }
+      } catch (e) {}
+
+      // Générer ou récupérer un ID de session unique
+      let sessionId = sessionStorage.getItem('duplik_sid');
+      if (!sessionId) {
+        sessionId = 's_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
+        sessionStorage.setItem('duplik_sid', sessionId);
+      }
+
+      // Détecter le type d'appareil
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const deviceType = isMobile ? 'mobile' : 'desktop';
+
+      // Fonction d'envoi d'événement silencieux
+      function track(eventType, eventData = {}) {
+        if (!db) return;
+        try {
+          db.from('tunnel_events').insert([{
+            event_type: eventType,
+            event_data: eventData,
+            session_id: sessionId,
+            device_type: deviceType,
+            referrer: document.referrer || 'direct'
+          }]).then(({ error }) => {
+            if (error) console.warn('Track error:', error.message);
+          }).catch(() => {});
+        } catch (e) {}
+      }
+
+      // 1. Visite initiale
+      track('visit', { url: window.location.href });
+
+      // 2. Clics sur les boutons de réservation (CTA)
+      document.addEventListener('click', function(e) {
+        const btn = e.target.closest('a[href="#offre"], .btn-primary, .btn-white');
+        if (btn && (btn.textContent.includes('RÉSERVEZ') || btn.classList.contains('btn-primary'))) {
+          track('cta_click', { text: btn.textContent.trim().substring(0, 30) });
+        }
+      });
+
+      // 3. Détection de pannes vidéo Vimeo
+      window.addEventListener('error', function(e) {
+        if (e.target && e.target.tagName === 'IFRAME' && e.target.src && e.target.src.includes('vimeo.com')) {
+          track('vimeo_error', { src: e.target.src });
+        }
+      }, true);
+
+      // Exposer la fonction globale pour les modules internes
+      window.duplikTrack = track;
+    })();
+  </script>
 </body>
 </html>
