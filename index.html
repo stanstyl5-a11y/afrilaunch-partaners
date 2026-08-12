@@ -2824,6 +2824,23 @@
 
 
       /* ------------------------------------------------------------------------
+         GESTIONNAIRE GLOBAL — UNE SEULE VIDÉO ACTIVE À LA FOIS
+         Envoie un "pause" à tous les players Vimeo actifs sauf celui
+         passé en paramètre (pour ne pas se couper soi-même).
+         ------------------------------------------------------------------------ */
+      function pauseAllVimeoPlayers(exceptIframe) {
+        document.querySelectorAll('iframe[src*="vimeo.com"]').forEach(function(iframe) {
+          if (iframe === exceptIframe) return;
+          try {
+            iframe.contentWindow.postMessage(
+              JSON.stringify({ method: 'pause' }),
+              'https://player.vimeo.com'
+            );
+          } catch (e) {}
+        });
+      }
+
+      /* ------------------------------------------------------------------------
          2. GESTION DE LA VIDÉO HERO (AUTOPLAY EN MUET 3S + GRAND BOUTON PLAY CLIGNOTANT)
          ------------------------------------------------------------------------ */
       const heroContainer = document.getElementById('heroVideoContainer');
@@ -2878,6 +2895,9 @@
             let iframe = heroContainer.querySelector('iframe');
             let src = `https://player.vimeo.com/video/${videoId}?autoplay=1&muted=0&autopause=0&title=0&byline=0&portrait=0#t=0s`;
             if (videoH) src += `&h=${videoH}`;
+
+            // Pause toutes les autres vidéos avant de jouer celle-ci
+            pauseAllVimeoPlayers(iframe);
 
             if (iframe) {
               iframe.src = src;
@@ -2963,6 +2983,9 @@
 
           let iframe = shortContainer.querySelector('iframe');
           const src = `https://player.vimeo.com/video/${shortVideoId}?autoplay=1&muted=0&autopause=0&title=0&byline=0&portrait=0#t=0s`;
+
+          // Pause toutes les autres vidéos avant de jouer celle-ci
+          pauseAllVimeoPlayers(iframe);
 
           if (iframe) {
             iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
@@ -3062,6 +3085,9 @@
 
           let iframe = shortContainer2.querySelector('iframe');
           const src = `https://player.vimeo.com/video/${shortVideoId2}?autoplay=1&muted=0&autopause=0&title=0&byline=0&portrait=0#t=0s`;
+
+          // Pause toutes les autres vidéos avant de jouer celle-ci
+          pauseAllVimeoPlayers(iframe);
 
           if (iframe) {
             iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
@@ -3202,6 +3228,9 @@
 
       function openModal(videoId, videoH) {
         if (!videoModal || !modalIframeWrapper) return;
+
+        // Pause toutes les vidéos actives avant d'ouvrir la modale
+        pauseAllVimeoPlayers(null);
 
         let src = `https://player.vimeo.com/video/${videoId}?autoplay=1&title=0&byline=0&portrait=0`;
         if (videoH) src += `&h=${videoH}`;
