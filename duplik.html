@@ -3391,6 +3391,11 @@
         chariowModal.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
 
+        // Enregistrer l'événement d'ouverture du paiement
+        if (window.duplikTrack) {
+          window.duplikTrack('payment_open', { price: 5000, currency: 'FCFA' });
+        }
+
         // Masquage garanti du spinner après 800ms max pour éviter le blocage
         setTimeout(hideChariowLoader, 800);
       }
