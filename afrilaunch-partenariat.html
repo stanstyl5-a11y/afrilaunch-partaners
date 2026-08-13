@@ -961,7 +961,9 @@
         resume();
       }
     }
-    return { activate, release };
+    function stop() { pause(); }
+    function go() { if (trackEl) trackEl.classList.remove('is-paused'); }
+    return { activate, release, stop, go };
   }
 
   const videoCarousel = makeCarouselController(
@@ -987,6 +989,15 @@
 
       if (isCarouselFrame) {
         videoCarousel.activate(frame);
+
+        // La vidéo pilote elle-même le défilement : elle joue → le carrousel
+        // s'arrête ; elle est mise en pause (ou terminée) → il reprend.
+        try {
+          const framePlayer = new Vimeo.Player(iframe);
+          framePlayer.on('play', () => videoCarousel.stop());
+          framePlayer.on('pause', () => videoCarousel.go());
+          framePlayer.on('ended', () => videoCarousel.go());
+        } catch (err) {}
 
         const closeBtn = document.createElement('button');
         closeBtn.className = 'proof-close';
@@ -1015,16 +1026,6 @@
       if (!anim) return;
       if (anim.playState === 'running') anim.pause();
       else anim.play();
-    });
-  }
-
-  // Même mécanique que le carrousel d'images : un clic sur la piste met en
-  // pause/relance le défilement — y compris un clic sur le bouton play lui-même,
-  // qui garde en plus son action normale (lancer la vidéo).
-  const videoCarouselTrack = document.querySelector('.proof-carousel:not(.proof-carousel--img) .proof-carousel-track');
-  if (videoCarouselTrack) {
-    videoCarouselTrack.addEventListener('click', () => {
-      videoCarouselTrack.classList.toggle('is-paused');
     });
   }
 
