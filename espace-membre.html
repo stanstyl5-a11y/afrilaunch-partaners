@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Espace membre — Afrilaunch Partners</title>
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ffffff;
+    --bg-alt:#f7f4ee;
+    --line:#e9e4d9;
+    --ink:#221f1a;
+    --ink-dim:#6a6459;
+    --ink-faint:#a49c8d;
+    --accent:#f7c948;
+    --accent-deep:#e2a900;
+    --danger:#c0392b;
+    --radius:18px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg); color:var(--ink); font-family:'Inter', sans-serif; line-height:1.55;}
+  h1,h2{font-family:'Fraunces', serif; font-weight:500; letter-spacing:-0.01em;}
+  a{color:inherit; text-decoration:none;}
+  button{font-family:inherit; cursor:pointer;}
+  a:focus-visible, button:focus-visible, input:focus-visible{outline:2px solid var(--accent-deep); outline-offset:3px;}
+
+  /* ── shared form/status screens ── */
+  .center-screen{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;}
+  .card{background:#fff; border:1px solid var(--line); border-radius:20px; padding:36px 32px; width:min(420px, 100%); box-shadow:0 20px 50px rgba(34,31,26,0.08); text-align:center;}
+  .card.form-card{text-align:left;}
+  .card h1{font-size:22px; margin-bottom:6px;}
+  .card p.lead{color:var(--ink-dim); font-size:14px; margin-bottom:22px;}
+  .field{width:100%; background:#fff; border:1px solid var(--line); color:var(--ink); padding:13px 15px; border-radius:12px; font-size:14.5px; margin-bottom:10px; font-family:'Inter';}
+  .field:focus{border-color:var(--accent-deep); outline:none;}
+  .btn{width:100%; padding:13px; border:none; border-radius:12px; background:var(--ink); color:#fff; font-weight:700; font-size:14.5px; margin-top:6px;}
+  .btn:disabled{opacity:0.6; cursor:not-allowed;}
+  .btn-accent{background:var(--accent); color:var(--ink);}
+  .error-box{display:none; background:#fdecea; border:1px solid var(--danger); color:var(--danger); border-radius:10px; padding:10px 12px; font-size:13px; margin-bottom:10px; text-align:left;}
+  .error-box.show{display:block;}
+  .status-icon{width:52px; height:52px; margin:0 auto 20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px;}
+  .status-icon.pending{background:var(--bg-alt);}
+  .status-icon.rejected{background:#fdecea;}
+  .logout-link{display:inline-block; margin-top:22px; font-size:13px; color:var(--ink-dim); font-weight:600;}
+  .logout-link:hover{color:var(--ink);}
+
+  /* ── member space ── */
+  #memberSpace{display:none;}
+  header.nav{background:rgba(255,255,255,0.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:10;}
+  .nav-inner{max-width:840px; margin:0 auto; padding:16px 24px; display:flex; align-items:center; justify-content:space-between;}
+  .brand{font-family:'Fraunces', serif; font-weight:600; font-size:18px;}
+  .nav-actions{display:flex; align-items:center; gap:10px;}
+  .logout-btn{
+    background:none; border:1px solid var(--line); border-radius:999px; padding:8px 16px;
+    font-size:13px; font-weight:600; color:var(--ink); display:inline-flex; align-items:center;
+  }
+  .logout-btn:hover{border-color:var(--ink-faint);}
+  a.logout-btn{padding:8px; line-height:0;}
+
+  main{max-width:840px; margin:0 auto; padding:32px 24px 80px;}
+
+  .welcome h1{font-size:clamp(24px,3.4vw,30px); margin-bottom:8px;}
+  .welcome p{color:var(--ink-dim); font-size:15px; margin-bottom:24px;}
+
+  .video-frame{
+    position:relative; width:100%; aspect-ratio:16/9; margin-top:14px;
+    border-radius:12px; overflow:hidden; background:#111; border:1px solid var(--line);
+  }
+  .video-frame iframe, .video-frame video{position:absolute; inset:0; width:100%; height:100%; border:0; display:block;}
+  .video-frame.empty{
+    display:flex; align-items:center; justify-content:center; background:var(--bg-alt);
+    color:var(--ink-faint); font-size:13.5px;
+  }
+
+  .section-title{font-size:19px; margin-bottom:16px;}
+  .lesson-list{display:flex; flex-direction:column; gap:14px;}
+  .lesson-card{background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:20px 22px;}
+  .lesson-card .num{display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:8px; background:#fdf0c8; color:var(--accent-deep); font-weight:700; font-size:13px; margin-bottom:10px;}
+  .lesson-card h3{font-family:'Fraunces', serif; font-weight:600; font-size:17px; margin-bottom:6px;}
+  .lesson-card p{color:var(--ink-dim); font-size:14px; margin-bottom:10px;}
+  .empty{color:var(--ink-faint); font-size:14px; text-align:center; padding:40px 20px;}
+  .spinner{width:24px; height:24px; margin:50px auto; border:3px solid var(--line); border-top-color:var(--accent-deep); border-radius:50%; animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div class="center-screen" id="loginScreen" style="display:none;">
+  <div class="card form-card">
+    <h1>Espace membre</h1>
+    <p class="lead">Connecte-toi avec le compte créé lors de ta candidature.</p>
+    <div class="error-box" id="loginError"></div>
+    <input class="field" id="loginEmail" type="email" placeholder="Email" autocomplete="username">
+    <input class="field" id="loginPassword" type="password" placeholder="Mot de passe" autocomplete="current-password">
+    <button class="btn" id="loginBtn">Se connecter</button>
+    <p style="text-align:center; margin-top:16px; font-size:13px; color:var(--ink-dim);">Pas encore de compte ? <a href="postuler.html" style="color:var(--accent-deep); font-weight:600;">Postuler</a></p>
+  </div>
+</div>
+
+<!-- ── PENDING ── -->
+<div class="center-screen" id="pendingScreen" style="display:none;">
+  <div class="card">
+    <div class="status-icon pending">⏳</div>
+    <h1>Candidature en cours d'examen</h1>
+    <p class="lead" id="pendingText">Notre équipe étudie ton profil. Si ton profil est validé, nous te contacterons directement sur WhatsApp.</p>
+  </div>
+</div>
+
+<!-- ── REJECTED ── -->
+<div class="center-screen" id="rejectedScreen" style="display:none;">
+  <div class="card">
+    <div class="status-icon rejected">✕</div>
+    <h1>Candidature non retenue</h1>
+    <p class="lead">Ton profil ne correspond pas au programme pour le moment. N'hésite pas à nous recontacter sur WhatsApp si tu penses que c'est une erreur.</p>
+    <a class="logout-link" href="#" id="rejectedLogout">Se déconnecter</a>
+  </div>
+</div>
+
+<!-- ── MEMBER SPACE (approved) ── -->
+<div id="memberSpace">
+  <header class="nav">
+    <div class="nav-inner">
+      <div class="brand">Espace membre</div>
+      <div class="nav-actions">
+        <a class="logout-btn" href="afrilaunch-partenariat.html" aria-label="Retour à l'accueil">
+          <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 9.5 10 3l7 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 8.5V17h9V8.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <button class="logout-btn" id="logoutBtn">Déconnexion</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="welcome">
+      <h1 id="welcomeTitle">Bienvenue !</h1>
+    </div>
+
+    <h2 class="section-title">Formations</h2>
+    <div id="lessonList"><div class="spinner"></div></div>
+  </main>
+</div>
+
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+  const SUPABASE_URL = 'https://jxlpcwloluhtprmxonnj.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_GDCB5UZ8uyNvtuPDndI5VA_cuQ6yFsL';
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const screens = {
+    login: document.getElementById('loginScreen'),
+    pending: document.getElementById('pendingScreen'),
+    rejected: document.getElementById('rejectedScreen'),
+    member: document.getElementById('memberSpace'),
+  };
+
+  function showScreen(name) {
+    Object.entries(screens).forEach(([key, el]) => {
+      el.style.display = key === name ? (key === 'member' ? 'block' : 'flex') : 'none';
+    });
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  async function signOutAndShowLogin(e) {
+    if (e) e.preventDefault();
+    await supabase.auth.signOut();
+    showScreen('login');
+  }
+
+  document.getElementById('logoutBtn').addEventListener('click', signOutAndShowLogin);
+  document.getElementById('rejectedLogout').addEventListener('click', signOutAndShowLogin);
+
+  async function routeByApplicationStatus(user) {
+    const { data: application, error } = await supabase
+      .from('applications')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (error || !application) {
+      showScreen('pending');
+      document.getElementById('pendingText').textContent = "On ne retrouve pas ta candidature. Contacte-nous sur WhatsApp pour qu'on vérifie.";
+      return;
+    }
+
+    if (application.status === 'approved') {
+      enterMemberSpace(user, application);
+    } else if (application.status === 'rejected') {
+      showScreen('rejected');
+    } else {
+      showScreen('pending');
+    }
+  }
+
+  function enterMemberSpace(user, application) {
+    const meta = user.user_metadata || {};
+    document.getElementById('welcomeTitle').textContent = meta.first_name ? `Bienvenue, ${meta.first_name} !` : 'Bienvenue !';
+
+    showScreen('member');
+    loadLessons();
+  }
+
+  async function loadLessons() {
+    const list = document.getElementById('lessonList');
+    const { data, error } = await supabase.from('lessons').select('*').order('position', { ascending: true });
+
+    if (error) {
+      list.innerHTML = `<div class="empty">Erreur de chargement des formations : ${escapeHtml(error.message)}</div>`;
+      return;
+    }
+    if (!data || data.length === 0) {
+      list.innerHTML = '<div class="empty">Aucune formation disponible pour le moment.</div>';
+      return;
+    }
+
+    list.innerHTML = `<div class="lesson-list">${data.map((l, i) => `
+      <div class="lesson-card">
+        <div class="num">${i + 1}</div>
+        <h3>${escapeHtml(l.title)}</h3>
+        ${l.description ? `<p>${escapeHtml(l.description)}</p>` : ''}
+        ${videoFrameHtml(l.video_url)}
+      </div>
+    `).join('')}</div>`;
+  }
+
+  function toEmbedUrl(url) {
+    try {
+      const u = new URL(url);
+      const host = u.hostname.replace('www.', '');
+
+      if (host === 'youtu.be') {
+        return `https://www.youtube.com/embed/${u.pathname.slice(1)}`;
+      }
+      if (host === 'youtube.com' || host === 'm.youtube.com') {
+        if (u.pathname === '/watch') return `https://www.youtube.com/embed/${u.searchParams.get('v')}`;
+        if (u.pathname.startsWith('/embed/')) return url;
+      }
+      if (host === 'vimeo.com') {
+        const id = u.pathname.split('/').filter(Boolean)[0];
+        return id ? `https://player.vimeo.com/video/${id}` : null;
+      }
+      if (host === 'player.vimeo.com') return url;
+
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  function videoFrameHtml(videoUrl) {
+    if (!videoUrl) return '<div class="video-frame empty">Vidéo à venir</div>';
+
+    const embedUrl = toEmbedUrl(videoUrl);
+    if (embedUrl) {
+      return `<div class="video-frame"><iframe src="${escapeHtml(embedUrl)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`;
+    }
+    // Pas un lien YouTube/Vimeo reconnu — on tente une vidéo directe (mp4...).
+    return `<div class="video-frame"><video controls src="${escapeHtml(videoUrl)}"></video></div>`;
+  }
+
+  // ── Login ──
+  const loginBtn = document.getElementById('loginBtn');
+  async function tryLogin() {
+    const errorBox = document.getElementById('loginError');
+    errorBox.classList.remove('show');
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Connexion...';
+
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Se connecter';
+
+    if (error) {
+      errorBox.textContent = 'Email ou mot de passe incorrect.';
+      errorBox.classList.add('show');
+      return;
+    }
+    routeByApplicationStatus(data.user);
+  }
+  loginBtn.addEventListener('click', tryLogin);
+  document.getElementById('loginPassword').addEventListener('keydown', (e) => { if (e.key === 'Enter') tryLogin(); });
+
+  // ── Bootstrap ──
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    routeByApplicationStatus(session.user);
+  } else {
+    showScreen('login');
+  }
+</script>
+
+</body>
+</html>

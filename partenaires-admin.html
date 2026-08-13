@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Candidatures — Afrilaunch Partners Admin</title>
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ffffff;
+    --bg-alt:#f7f4ee;
+    --line:#e9e4d9;
+    --ink:#221f1a;
+    --ink-dim:#6a6459;
+    --ink-faint:#a49c8d;
+    --accent:#f7c948;
+    --accent-deep:#e2a900;
+    --green:#1e8e5a;
+    --green-soft:#e3f5eb;
+    --red:#c0392b;
+    --red-soft:#fdecea;
+    --radius:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg-alt); color:var(--ink); font-family:'Inter', sans-serif; line-height:1.5;}
+  h1,h2{font-family:'Fraunces', serif; font-weight:500; letter-spacing:-0.01em;}
+  a{color:inherit;}
+  button{font-family:inherit; cursor:pointer;}
+  a:focus-visible, button:focus-visible, input:focus-visible{outline:2px solid var(--accent-deep); outline-offset:3px;}
+
+  /* ── LOGIN GATE ── */
+  #login-gate{
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .login-card{
+    background:#fff; border:1px solid var(--line); border-radius:20px;
+    padding:36px 32px; width:min(380px, 100%); box-shadow:0 20px 50px rgba(34,31,26,0.08);
+  }
+  .login-card h1{font-size:22px; margin-bottom:6px;}
+  .login-card p{color:var(--ink-dim); font-size:14px; margin-bottom:22px;}
+  .field{
+    width:100%; background:#fff; border:1px solid var(--line); color:var(--ink);
+    padding:13px 15px; border-radius:12px; font-size:14.5px; margin-bottom:10px; font-family:'Inter';
+  }
+  .field:focus{border-color:var(--accent-deep); outline:none;}
+  .login-btn{
+    width:100%; padding:13px; border:none; border-radius:12px; background:var(--ink); color:#fff;
+    font-weight:700; font-size:14.5px; margin-top:6px;
+  }
+  .login-btn:disabled{opacity:0.6; cursor:not-allowed;}
+  .login-error{
+    display:none; background:var(--red-soft); border:1px solid var(--red); color:var(--red);
+    border-radius:10px; padding:10px 12px; font-size:13px; margin-bottom:10px;
+  }
+  .login-error.show{display:block;}
+
+  /* ── DASHBOARD ── */
+  #dashboard{display:none;}
+  .topbar{
+    background:#fff; border-bottom:1px solid var(--line); padding:16px 24px;
+    display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10;
+  }
+  .topbar .brand{font-family:'Fraunces', serif; font-weight:600; font-size:18px;}
+  .topbar .actions{display:flex; align-items:center; gap:10px; font-size:13px;}
+  .icon-btn{
+    background:none; border:1px solid var(--line); border-radius:999px; padding:8px 16px;
+    font-size:13px; font-weight:600; color:var(--ink);
+  }
+  .icon-btn:hover{border-color:var(--ink-faint);}
+
+  main{max-width:920px; margin:0 auto; padding:28px 20px 80px;}
+
+  .tabs{display:flex; gap:8px; margin-bottom:20px;}
+  .tab{
+    padding:9px 18px; border-radius:999px; border:1px solid var(--line); background:#fff;
+    font-size:13.5px; font-weight:600; color:var(--ink-dim);
+  }
+  .tab.active{background:var(--ink); color:#fff; border-color:var(--ink);}
+
+  .empty{text-align:center; color:var(--ink-faint); padding:60px 20px; font-size:14px;}
+
+  .card{
+    background:#fff; border:1px solid var(--line); border-radius:var(--radius);
+    padding:20px 22px; margin-bottom:14px;
+  }
+  .card-top{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:10px;}
+  .card-name{font-family:'Fraunces', serif; font-size:18px; font-weight:600;}
+  .card-date{font-size:12px; color:var(--ink-faint); margin-top:2px;}
+  .badge{
+    font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;
+    padding:4px 10px; border-radius:999px; white-space:nowrap;
+  }
+  .badge.pending{background:var(--bg-alt); color:var(--ink-dim);}
+  .badge.approved{background:var(--green-soft); color:var(--green);}
+  .badge.rejected{background:var(--red-soft); color:var(--red);}
+
+  .card-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px 20px; font-size:13.5px; margin-bottom:12px;}
+  .card-grid .field-label{color:var(--ink-faint); font-size:11.5px; text-transform:uppercase; letter-spacing:0.03em; margin-bottom:2px;}
+  .card-grid .field-value{color:var(--ink);}
+  .card-grid a.field-value{color:var(--accent-deep); font-weight:600;}
+  .card-message{
+    background:var(--bg-alt); border-radius:10px; padding:10px 13px; font-size:13.5px;
+    color:var(--ink-dim); margin-bottom:14px;
+  }
+
+  .card-actions{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+  .btn-approve, .btn-reject{
+    border:none; border-radius:999px; padding:9px 18px; font-size:13.5px; font-weight:700;
+  }
+  .btn-approve{background:var(--accent); color:var(--ink);}
+  .btn-approve:hover{box-shadow:0 6px 16px rgba(247,201,72,0.4);}
+  .btn-reject{background:none; border:1px solid var(--line); color:var(--ink-dim);}
+  .btn-reject:hover{border-color:var(--red); color:var(--red);}
+  .btn-approve:disabled, .btn-reject:disabled{opacity:0.5; cursor:not-allowed;}
+
+  .link-box{
+    display:flex; align-items:center; gap:8px; background:var(--bg-alt); border:1px solid var(--line);
+    border-radius:10px; padding:9px 12px; font-size:13px; font-family:monospace; margin-top:10px;
+  }
+  .link-box span{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .copy-btn{
+    background:var(--ink); color:#fff; border:none; border-radius:8px; padding:6px 12px;
+    font-size:12px; font-weight:600; flex-shrink:0;
+  }
+  .copy-btn.copied{background:var(--green);}
+
+  .spinner{
+    width:26px; height:26px; margin:60px auto; border:3px solid var(--line);
+    border-top-color:var(--accent-deep); border-radius:50%; animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN GATE ── -->
+<div id="login-gate">
+  <div class="login-card">
+    <h1>Candidatures partenaires</h1>
+    <p>Connexion réservée à l'équipe Afrilaunch.</p>
+    <div class="login-error" id="loginError"></div>
+    <input class="field" id="loginEmail" type="email" placeholder="Email" autocomplete="username">
+    <input class="field" id="loginPassword" type="password" placeholder="Mot de passe" autocomplete="current-password">
+    <button class="login-btn" id="loginBtn">Se connecter</button>
+  </div>
+</div>
+
+<!-- ── DASHBOARD ── -->
+<div id="dashboard">
+  <div class="topbar">
+    <div class="brand">Candidatures partenaires</div>
+    <div class="actions">
+      <button class="icon-btn" id="refreshBtn">↻ Actualiser</button>
+      <button class="icon-btn" id="logoutBtn">Déconnexion</button>
+    </div>
+  </div>
+
+  <main>
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-status="pending">En attente</button>
+      <button class="tab" data-status="approved">Approuvées</button>
+      <button class="tab" data-status="rejected">Refusées</button>
+      <button class="tab" data-status="all">Toutes</button>
+    </div>
+
+    <div id="list"><div class="spinner"></div></div>
+  </main>
+</div>
+
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+  const SUPABASE_URL = 'https://jxlpcwloluhtprmxonnj.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_GDCB5UZ8uyNvtuPDndI5VA_cuQ6yFsL';
+  const supa = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const loginGate = document.getElementById('login-gate');
+  const dashboard = document.getElementById('dashboard');
+  const loginError = document.getElementById('loginError');
+  const loginBtn = document.getElementById('loginBtn');
+  const list = document.getElementById('list');
+  const tabs = document.getElementById('tabs');
+
+  let currentStatus = 'pending';
+  let cache = [];
+
+  function showLoginError(msg) {
+    loginError.textContent = msg;
+    loginError.classList.add('show');
+  }
+
+  async function tryLogin() {
+    loginError.classList.remove('show');
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Connexion...';
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+
+    const { error } = await supa.auth.signInWithPassword({ email, password });
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Se connecter';
+
+    if (error) {
+      showLoginError("Connexion refusée. Vérifie l'email et le mot de passe.");
+      return;
+    }
+    enterDashboard();
+  }
+
+  loginBtn.addEventListener('click', tryLogin);
+  document.getElementById('loginPassword').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') tryLogin();
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await supa.auth.signOut();
+    dashboard.style.display = 'none';
+    loginGate.style.display = 'flex';
+  });
+
+  document.getElementById('refreshBtn').addEventListener('click', loadApplications);
+
+  tabs.addEventListener('click', (e) => {
+    const btn = e.target.closest('.tab');
+    if (!btn) return;
+    tabs.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+    btn.classList.add('active');
+    currentStatus = btn.dataset.status;
+    render();
+  });
+
+  async function enterDashboard() {
+    loginGate.style.display = 'none';
+    dashboard.style.display = 'block';
+    loadApplications();
+  }
+
+  async function loadApplications() {
+    list.innerHTML = '<div class="spinner"></div>';
+    const { data, error } = await supa
+      .from('applications')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      list.innerHTML = `<div class="empty">Erreur de chargement : ${error.message}</div>`;
+      return;
+    }
+    cache = data || [];
+    render();
+  }
+
+  function formatDate(iso) {
+    return new Date(iso).toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+  }
+
+  function render() {
+    const rows = currentStatus === 'all' ? cache : cache.filter((r) => r.status === currentStatus);
+
+    if (rows.length === 0) {
+      list.innerHTML = '<div class="empty">Aucune candidature ici pour le moment.</div>';
+      return;
+    }
+
+    list.innerHTML = rows.map((r) => {
+      const waHref = 'https://wa.me/' + r.whatsapp.replace(/[^\d]/g, '');
+      return `
+        <div class="card" data-id="${r.id}">
+          <div class="card-top">
+            <div>
+              <div class="card-name">${escapeHtml(r.first_name)} ${escapeHtml(r.last_name)}</div>
+              <div class="card-date">${formatDate(r.created_at)}</div>
+            </div>
+            <span class="badge ${r.status}">${r.status === 'pending' ? 'En attente' : r.status === 'approved' ? 'Approuvée' : 'Refusée'}</span>
+          </div>
+          <div class="card-grid">
+            <div><div class="field-label">WhatsApp</div><a class="field-value" href="${waHref}" target="_blank" rel="noopener">${escapeHtml(r.whatsapp)}</a></div>
+            <div><div class="field-label">Email</div><div class="field-value">${escapeHtml(r.email || '—')}</div></div>
+          </div>
+          ${r.message ? `<div class="card-message">${escapeHtml(r.message)}</div>` : ''}
+          ${r.status === 'pending' ? `
+            <div class="card-actions">
+              <button class="btn-approve" data-action="approve">Approuver</button>
+              <button class="btn-reject" data-action="reject">Refuser</button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  list.addEventListener('click', async (e) => {
+    const actionBtn = e.target.closest('[data-action="approve"], [data-action="reject"]');
+    if (!actionBtn) return;
+
+    const card = actionBtn.closest('.card');
+    const id = Number(card.dataset.id);
+    const row = cache.find((r) => r.id === id);
+    if (!row) return;
+
+    card.querySelectorAll('button').forEach((b) => (b.disabled = true));
+
+    const { data: { user: currentUser } } = await supa.auth.getUser();
+
+    let result;
+    if (actionBtn.dataset.action === 'approve') {
+      result = await supa
+        .from('applications')
+        .update({ status: 'approved', reviewed_at: new Date().toISOString() })
+        .eq('id', id)
+        .select();
+    } else {
+      result = await supa
+        .from('applications')
+        .update({ status: 'rejected', reviewed_at: new Date().toISOString() })
+        .eq('id', id)
+        .select();
+    }
+
+    if (result.error) {
+      alert("Erreur : " + result.error.message);
+    } else if (!result.data || result.data.length === 0) {
+      alert(
+        "La mise à jour n'a pas été appliquée (0 ligne modifiée). " +
+        "Compte actuellement connecté : " + (currentUser?.email || 'inconnu') + ". " +
+        "Vérifie que c'est bien ton compte admin (table 'admins') — reconnecte-toi si besoin."
+      );
+    }
+
+    await loadApplications();
+  });
+
+  // Session déjà active (ex: page rafraîchie)
+  const { data: { session } } = await supa.auth.getSession();
+  if (session) enterDashboard();
+</script>
+
+</body>
+</html>
