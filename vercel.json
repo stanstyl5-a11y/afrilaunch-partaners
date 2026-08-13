@@ -9,11 +9,7 @@
   "routes": [
     {
       "src": "/",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/duplik",
-      "dest": "/duplik.html"
+      "dest": "/afrilaunch-partenariat.html"
     },
     {
       "src": "/(.*)",
