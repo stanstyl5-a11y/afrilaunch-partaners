@@ -952,7 +952,6 @@
     }
     function activate(frame) {
       activeCount++;
-      pause();
       center(frame);
     }
     function release() {
@@ -1020,15 +1019,12 @@
   }
 
   // Même mécanique que le carrousel d'images : un clic sur la piste met en
-  // pause/relance le défilement — sans toucher au bouton play des vidéos.
+  // pause/relance le défilement — y compris un clic sur le bouton play lui-même,
+  // qui garde en plus son action normale (lancer la vidéo).
   const videoCarouselTrack = document.querySelector('.proof-carousel:not(.proof-carousel--img) .proof-carousel-track');
   if (videoCarouselTrack) {
-    videoCarouselTrack.addEventListener('click', (e) => {
-      if (e.target.closest('.mini-play, .proof-close')) return;
-      const anim = videoCarouselTrack.getAnimations()[0];
-      if (!anim) return;
-      if (anim.playState === 'running') anim.pause();
-      else anim.play();
+    videoCarouselTrack.addEventListener('click', () => {
+      videoCarouselTrack.classList.toggle('is-paused');
     });
   }
 
