@@ -116,6 +116,19 @@
     display:flex; flex-direction:column; align-items:center; gap:28px;
     max-width:900px; margin:0 auto;
   }
+  .video-attention{
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    margin-bottom:-18px; animation:video-attention-bounce 1.4s ease-in-out infinite;
+  }
+  .video-attention-text{
+    color:#e2483f; font-weight:800; font-size:15px; text-align:center;
+  }
+  .video-attention-arrow{display:block;}
+  @keyframes video-attention-bounce{
+    0%, 100%{transform:translateY(0);}
+    50%{transform:translateY(8px);}
+  }
+  @media (prefers-reduced-motion: reduce){ .video-attention{animation:none;} }
   .video-shell{
     position:relative; border-radius:18px; overflow:hidden;
     background:#fff;
@@ -391,6 +404,10 @@
     <h1 class="hero-headline">Ta visibilité vaut de l'argent. <span class="hl">On te montre comment l'encaisser.</span></h1>
 
     <div class="hero-split" id="form">
+      <div class="video-attention">
+        <span class="video-attention-text">Cette vidéo est à regarder à tout prix !</span>
+        <svg class="video-attention-arrow" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#e2483f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="19"></line><polyline points="6 13 12 19 18 13"></polyline></svg>
+      </div>
       <div class="video-shell" id="videoShell" data-vimeo-id="1217809162">
         <img class="video-thumb" id="videoThumb" alt="Aperçu de la vidéo de présentation Afrilaunch Partners" loading="eager" fetchpriority="high">
         <!-- La vidéo se lance seule (muette) dès l'ouverture de la page -->
