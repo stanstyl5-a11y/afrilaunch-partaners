@@ -199,6 +199,7 @@
     display:flex; gap:14px; width:max-content;
     animation:proof-carousel-scroll 60s linear infinite;
   }
+  .proof-carousel-track.is-paused{animation-play-state:paused;}
   .proof-carousel--img .proof-carousel-track{animation-duration:220s; cursor:pointer; gap:22px;}
   @media (prefers-reduced-motion: reduce){ .proof-carousel-track{animation:none;} }
   @keyframes proof-carousel-scroll{from{transform:translateX(0);} to{transform:translateX(-50%);}}
@@ -933,17 +934,11 @@
   function makeCarouselController(carouselEl, offsetEl, trackEl) {
     let activeCount = 0;
     let offsetX = 0;
-    function getTrackAnimation() {
-      if (!trackEl || !trackEl.getAnimations) return null;
-      return trackEl.getAnimations()[0] || null;
-    }
     function pause() {
-      const anim = getTrackAnimation();
-      if (anim) anim.pause();
+      if (trackEl) trackEl.classList.add('is-paused');
     }
     function resume() {
-      const anim = getTrackAnimation();
-      if (anim) anim.play();
+      if (trackEl) trackEl.classList.remove('is-paused');
       offsetX = 0;
       if (offsetEl) offsetEl.style.transform = '';
     }
