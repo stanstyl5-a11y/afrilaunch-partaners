@@ -73,6 +73,23 @@
 
   main{max-width:920px; margin:0 auto; padding:28px 20px 80px;}
 
+  .stats-grid{display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:24px;}
+  @media (max-width:900px){ .stats-grid{grid-template-columns:repeat(3,1fr);} }
+  @media (max-width:480px){ .stats-grid{grid-template-columns:repeat(2,1fr);} }
+  .stat-card{
+    background:#fff; border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px 18px;
+  }
+  .stat-card .stat-label{
+    font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em;
+    color:var(--ink-faint); margin-bottom:8px;
+  }
+  .stat-card .stat-value{font-family:'Fraunces', serif; font-size:26px; font-weight:600; color:var(--ink);}
+  .stat-card.pending .stat-value{color:var(--ink-dim);}
+  .stat-card.approved .stat-value{color:var(--green);}
+  .stat-card.rejected .stat-value{color:var(--red);}
+  .stat-card.rate .stat-value{color:var(--accent-deep);}
+
   .tabs{display:flex; gap:8px; margin-bottom:20px;}
   .tab{
     padding:9px 18px; border-radius:999px; border:1px solid var(--line); background:#fff;
@@ -159,6 +176,33 @@
   </div>
 
   <main>
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card">
+        <div class="stat-label">Visites</div>
+        <div class="stat-value" id="statVisits">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total</div>
+        <div class="stat-value" id="statTotal">—</div>
+      </div>
+      <div class="stat-card pending">
+        <div class="stat-label">En attente</div>
+        <div class="stat-value" id="statPending">—</div>
+      </div>
+      <div class="stat-card approved">
+        <div class="stat-label">Approuvées</div>
+        <div class="stat-value" id="statApproved">—</div>
+      </div>
+      <div class="stat-card rejected">
+        <div class="stat-label">Refusées</div>
+        <div class="stat-value" id="statRejected">—</div>
+      </div>
+      <div class="stat-card rate">
+        <div class="stat-label">Aujourd'hui</div>
+        <div class="stat-value" id="statToday">—</div>
+      </div>
+    </div>
+
     <div class="tabs" id="tabs">
       <button class="tab active" data-status="pending">En attente</button>
       <button class="tab" data-status="approved">Approuvées</button>
@@ -250,7 +294,33 @@
       return;
     }
     cache = data || [];
+    renderStats();
     render();
+    loadVisits();
+  }
+
+  async function loadVisits() {
+    const { count, error } = await supa
+      .from('page_visits')
+      .select('*', { count: 'exact', head: true });
+    document.getElementById('statVisits').textContent = error ? '—' : count;
+  }
+
+  function renderStats() {
+    const total = cache.length;
+    const pending = cache.filter((r) => r.status === 'pending').length;
+    const approved = cache.filter((r) => r.status === 'approved').length;
+    const rejected = cache.filter((r) => r.status === 'rejected').length;
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const today = cache.filter((r) => new Date(r.created_at) >= startOfToday).length;
+
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statPending').textContent = pending;
+    document.getElementById('statApproved').textContent = approved;
+    document.getElementById('statRejected').textContent = rejected;
+    document.getElementById('statToday').textContent = today;
   }
 
   function formatDate(iso) {

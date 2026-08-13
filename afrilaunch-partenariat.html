@@ -842,6 +842,21 @@
 
 <script src="https://player.vimeo.com/api/player.js"></script>
 <script>
+  // Enregistre une visite pour le tableau de bord admin — silencieux, ne bloque rien
+  // si ça échoue (pas de connexion, etc.).
+  try {
+    fetch('https://jxlpcwloluhtprmxonnj.supabase.co/rest/v1/page_visits', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: 'sb_publishable_GDCB5UZ8uyNvtuPDndI5VA_cuQ6yFsL',
+        Authorization: 'Bearer sb_publishable_GDCB5UZ8uyNvtuPDndI5VA_cuQ6yFsL',
+        Prefer: 'return=minimal',
+      },
+      body: JSON.stringify({ page: 'landing' }),
+    }).catch(() => {});
+  } catch {}
+
   const videoShell = document.getElementById('videoShell');
   const playBtn = document.getElementById('playBtn');
   const videoBadgeEl = document.querySelector('.video-badge');
