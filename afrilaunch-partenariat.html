@@ -128,6 +128,12 @@
   .video-warm-wrap.is-visible{opacity:1; pointer-events:auto; z-index:2;}
   .video-warm-wrap, #videoWarmPlayer{width:100%; height:100%;}
   .video-warm-wrap iframe{position:absolute; inset:0; width:100%; height:100%; border:0; display:block;}
+  .sound-btn{
+    position:absolute; inset:0; margin:auto; width:60px; height:60px; border-radius:50%;
+    background:var(--accent); border:none; cursor:pointer; z-index:3;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 0 0 12px rgba(247,201,72,0.22);
+  }
 
   .form-panel{width:100%; max-width:440px; margin:0 auto;}
   .form-panel h3{font-size:22px; margin-bottom:8px;}
@@ -389,6 +395,9 @@
         <img class="video-thumb" id="videoThumb" alt="Aperçu de la vidéo de présentation Afrilaunch Partners" loading="eager" fetchpriority="high">
         <!-- La vidéo se lance seule (muette) dès l'ouverture de la page -->
         <div class="video-warm-wrap is-visible" id="videoWarmWrap"><div id="videoWarmPlayer"></div></div>
+        <button class="sound-btn" id="soundBtn" aria-label="Activer le son de la vidéo">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="#221f1a"><polygon points="4,2 18,10 4,18"/></svg>
+        </button>
       </div>
       <a class="submit-btn" href="postuler.html" style="display:block; text-align:center; text-decoration:none; max-width:440px; margin:0 auto;">Devenir partenaire</a>
     </div>
@@ -849,6 +858,7 @@
 
   const videoShell = document.getElementById('videoShell');
   const videoThumbEl = document.getElementById('videoThumb');
+  const soundBtn = document.getElementById('soundBtn');
   const vimeoId = videoShell.dataset.vimeoId;
 
   // Récupère automatiquement la vignette de la vidéo Vimeo (pas d'URL fixe comme YouTube).
@@ -886,6 +896,19 @@
     videoShell.appendChild(iframe);
     videoThumbEl.remove();
   }
+
+  // Rétablir le son doit faire repartir la vidéo depuis le début, pas juste couper le mute.
+  soundBtn.addEventListener('click', () => {
+    try {
+      if (warmPlayer) {
+        warmPlayer.setCurrentTime(0);
+        warmPlayer.setMuted(false);
+        warmPlayer.setVolume(1);
+        warmPlayer.play();
+      }
+    } catch (err) {}
+    soundBtn.remove();
+  });
 
   function makeCarouselController(carouselEl, offsetEl, trackEl) {
     let activeCount = 0;
