@@ -1038,43 +1038,17 @@
     });
   }
 
-  document.querySelectorAll('.proof-carousel:not(.proof-carousel--img) .proof-frame, .proof-grid .proof-frame').forEach(initProofFrame);
+  document.querySelectorAll('.proof-frame').forEach(initProofFrame);
 
-  const imgCarousel = makeCarouselController(
-    document.querySelector('.proof-carousel--img'),
-    document.getElementById('imgCarouselOffset'),
-    document.getElementById('imgCarouselTrack')
-  );
-
-  function initImgFrame(frame) {
-    frame.addEventListener('click', () => {
-      if (frame.classList.contains('is-active')) return;
-
-      frame.classList.add('is-active');
-      const backdrop = getProofBackdrop();
-      backdrop.classList.add('is-visible');
-      imgCarousel.activate(frame);
-
-      const closeBtn = document.createElement('button');
-      closeBtn.className = 'proof-close';
-      closeBtn.setAttribute('aria-label', 'Fermer');
-      closeBtn.innerHTML = '&times;';
-
-      function closeImg() {
-        frame.classList.remove('is-active');
-        backdrop.classList.remove('is-visible');
-        backdrop.removeEventListener('click', closeImg);
-        closeBtn.remove();
-        imgCarousel.release();
-      }
-
-      closeBtn.addEventListener('click', (e) => { e.stopPropagation(); closeImg(); });
-      frame.appendChild(closeBtn);
-      backdrop.addEventListener('click', closeImg);
+  const imgCarouselTrack = document.getElementById('imgCarouselTrack');
+  if (imgCarouselTrack) {
+    imgCarouselTrack.addEventListener('click', () => {
+      const anim = imgCarouselTrack.getAnimations()[0];
+      if (!anim) return;
+      if (anim.playState === 'running') anim.pause();
+      else anim.play();
     });
   }
-
-  document.querySelectorAll('.proof-carousel--img .proof-frame').forEach(initImgFrame);
 
   document.querySelectorAll('.faq-item').forEach(item => {
     item.querySelector('.faq-q').addEventListener('click', () => {
