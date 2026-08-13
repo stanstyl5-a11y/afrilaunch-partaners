@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /partenaires-admin.html
+Disallow: /espace-membre.html
+
+Sitemap: https://afrilaunch-partenariat.vercel.app/sitemap.xml
