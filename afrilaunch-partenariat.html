@@ -233,20 +233,6 @@
     color:var(--ink); font-size:16px; line-height:1; cursor:pointer;
     display:flex; align-items:center; justify-content:center;
   }
-  .proof-backdrop{
-    position:fixed; inset:0; background:rgba(20,17,12,0.75); z-index:998;
-    opacity:0; pointer-events:none; transition:opacity .2s ease;
-  }
-  .proof-backdrop.is-visible{opacity:1; pointer-events:auto;}
-  .proof-frame.is-active{
-    position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
-    width:min(88vw, 380px); height:min(80vh, calc(min(88vw, 380px) * 16 / 9));
-    z-index:999; flex:none; box-shadow:0 30px 80px rgba(0,0,0,0.5);
-  }
-  .proof-frame.is-active .proof-close{
-    top:-14px; right:-14px; width:32px; height:32px; font-size:19px;
-  }
-  @media (prefers-reduced-motion: reduce){ .proof-backdrop{transition:none;} }
   .proof-thumb{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; background-size:cover; background-position:center;}
   .proof-tag{
     position:absolute; top:10px; left:10px; background:#fff; border:1px solid var(--line);
@@ -985,16 +971,6 @@
     document.querySelector('.proof-carousel:not(.proof-carousel--img) .proof-carousel-track')
   );
 
-  let proofBackdrop = null;
-  function getProofBackdrop() {
-    if (!proofBackdrop) {
-      proofBackdrop = document.createElement('div');
-      proofBackdrop.className = 'proof-backdrop';
-      document.body.appendChild(proofBackdrop);
-    }
-    return proofBackdrop;
-  }
-
   function initProofFrame(frame) {
     const playBtn = frame.querySelector('.mini-play');
     const isCarouselFrame = !!frame.closest('.proof-carousel:not(.proof-carousel--img) .proof-carousel-track');
@@ -1010,31 +986,24 @@
       frame.innerHTML = '';
       frame.appendChild(iframe);
 
-      // Agrandit la vidéo et la centre par-dessus la page (comme une fenêtre
-      // modale), pour que le futur partenaire puisse bien la regarder.
-      frame.classList.add('is-active');
-      const backdrop = getProofBackdrop();
-      backdrop.classList.add('is-visible');
+      if (isCarouselFrame) {
+        videoCarousel.activate(frame);
 
-      if (isCarouselFrame) videoCarousel.activate(frame);
-
-      function closeVideo() {
-        frame.classList.remove('is-active');
-        backdrop.classList.remove('is-visible');
-        backdrop.removeEventListener('click', closeVideo);
-        frame.innerHTML = originalContent;
-        initProofFrame(frame);
-        if (isCarouselFrame) videoCarousel.release();
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'proof-close';
+        closeBtn.setAttribute('aria-label', 'Fermer la vidéo');
+        closeBtn.innerHTML = '&times;';
+        closeBtn.addEventListener('click', () => {
+          frame.innerHTML = originalContent;
+          initProofFrame(frame);
+          videoCarousel.release();
+        });
+        frame.appendChild(closeBtn);
       }
 
-      const closeBtn = document.createElement('button');
-      closeBtn.className = 'proof-close';
-      closeBtn.setAttribute('aria-label', 'Fermer la vidéo');
-      closeBtn.innerHTML = '&times;';
-      closeBtn.addEventListener('click', closeVideo);
-      frame.appendChild(closeBtn);
-
-      backdrop.addEventListener('click', closeVideo);
+      // Ramène la vidéo cliquée bien au centre de l'écran, pour que le futur
+      // partenaire puisse la regarder sans avoir à faire défiler manuellement.
+      frame.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
   }
 
