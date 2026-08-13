@@ -1019,6 +1019,19 @@
     });
   }
 
+  // Même mécanique que le carrousel d'images : un clic sur la piste met en
+  // pause/relance le défilement — sans toucher au bouton play des vidéos.
+  const videoCarouselTrack = document.querySelector('.proof-carousel:not(.proof-carousel--img) .proof-carousel-track');
+  if (videoCarouselTrack) {
+    videoCarouselTrack.addEventListener('click', (e) => {
+      if (e.target.closest('.mini-play, .proof-close')) return;
+      const anim = videoCarouselTrack.getAnimations()[0];
+      if (!anim) return;
+      if (anim.playState === 'running') anim.pause();
+      else anim.play();
+    });
+  }
+
   document.querySelectorAll('.faq-item').forEach(item => {
     item.querySelector('.faq-q').addEventListener('click', () => {
       const isOpen = item.classList.contains('open');
