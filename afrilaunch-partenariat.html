@@ -984,7 +984,9 @@
     });
   }
 
-  document.querySelectorAll('.proof-frame').forEach(initProofFrame);
+  // Seul le carrousel vidéo défilant a un bouton play — la grille de cadres
+  // vierges et le carrousel d'images n'ont pas besoin de cette logique.
+  document.querySelectorAll('.proof-carousel:not(.proof-carousel--img) .proof-frame').forEach(initProofFrame);
 
   const imgCarouselTrack = document.getElementById('imgCarouselTrack');
   if (imgCarouselTrack) {
