@@ -94,6 +94,12 @@
     font-size:14.5px; color:var(--ink-dim); font-weight:500;
   }
   .nav-links a:hover{color:var(--ink);}
+  .nav-actions{display:flex; align-items:center; gap:16px;}
+  .nav-login{
+    font-size:14.5px; color:var(--ink-dim); font-weight:500;
+    text-decoration:none; white-space:nowrap;
+  }
+  .nav-login:hover{color:var(--ink);}
   .nav-cta{
     padding:11px 22px; border-radius:999px; font-size:14px; font-weight:700;
     border:none; background:var(--accent); color:var(--ink);
@@ -376,6 +382,9 @@
     .nav-inner{padding:14px 16px;}
     .brand{font-size:14px; gap:6px; white-space:nowrap;}
     .brand-mark{width:20px; height:20px; border-radius:6px;}
+    .nav-actions{gap:10px;}
+    .nav-login{font-size:12.5px;}
+    .nav-cta{padding:9px 16px; font-size:13px;}
 
     .hero{padding:28px 0 20px;}
     .hero-headline{margin:0 auto 28px;}
@@ -391,9 +400,11 @@
       <a href="#preuves">Témoignages</a>
       <a href="#apropos">À propos</a>
       <a href="#comment">Comment ça marche</a>
-      <a href="espace-membre.html">Se connecter</a>
     </nav>
-    <a class="nav-cta" href="postuler.html" style="display:inline-block; text-decoration:none;">Postuler</a>
+    <div class="nav-actions">
+      <a class="nav-login" href="espace-membre.html">Se connecter</a>
+      <a class="nav-cta" href="postuler.html" style="display:inline-block; text-decoration:none;">Postuler</a>
+    </div>
   </div>
 </header>
 
