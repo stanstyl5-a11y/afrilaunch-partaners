@@ -76,7 +76,7 @@
   }
 
   .section-title{font-size:19px; margin-bottom:16px;}
-  .lesson-list{display:flex; flex-direction:column; gap:14px;}
+  .lesson-list{display:flex; flex-direction:column; gap:14px; -webkit-user-select:none; user-select:none;}
   .lesson-card{background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:20px 22px;}
   .lesson-card .num{display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:8px; background:#fdf0c8; color:var(--accent-deep); font-weight:700; font-size:13px; margin-bottom:10px;}
   .lesson-card h3{font-family:'Fraunces', serif; font-weight:600; font-size:17px; margin-bottom:6px;}
@@ -219,7 +219,7 @@
       return;
     }
 
-    list.innerHTML = `<div class="lesson-list">${data.map((l, i) => `
+    list.innerHTML = `<div class="lesson-list" oncontextmenu="return false;">${data.map((l, i) => `
       <div class="lesson-card">
         <div class="num">${i + 1}</div>
         <h3>${escapeHtml(l.title)}</h3>
@@ -261,7 +261,7 @@
       return `<div class="video-frame"><iframe src="${escapeHtml(embedUrl)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`;
     }
     // Pas un lien YouTube/Vimeo reconnu — on tente une vidéo directe (mp4...).
-    return `<div class="video-frame"><video controls src="${escapeHtml(videoUrl)}"></video></div>`;
+    return `<div class="video-frame"><video controls controlsList="nodownload noremoteplayback" disablePictureInPicture oncontextmenu="return false;" src="${escapeHtml(videoUrl)}"></video></div>`;
   }
 
   // ── Login ──
