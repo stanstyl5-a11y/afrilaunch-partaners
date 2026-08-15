@@ -70,6 +70,7 @@
     border-radius:12px; overflow:hidden; background:#111; border:1px solid var(--line);
   }
   .video-frame iframe, .video-frame video{position:absolute; inset:0; width:100%; height:100%; border:0; display:block;}
+  .video-shield{position:absolute; top:0; right:0; width:72px; height:60px; z-index:5; cursor:default;}
   .video-frame.empty{
     display:flex; align-items:center; justify-content:center; background:var(--bg-alt);
     color:var(--ink-faint); font-size:13.5px;
@@ -258,7 +259,7 @@
 
     const embedUrl = toEmbedUrl(videoUrl);
     if (embedUrl) {
-      return `<div class="video-frame"><iframe src="${escapeHtml(embedUrl)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`;
+      return `<div class="video-frame"><iframe src="${escapeHtml(embedUrl)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe><div class="video-shield" title=""></div></div>`;
     }
     // Pas un lien YouTube/Vimeo reconnu — on tente une vidéo directe (mp4...).
     return `<div class="video-frame"><video controls controlsList="nodownload noremoteplayback" disablePictureInPicture oncontextmenu="return false;" src="${escapeHtml(videoUrl)}"></video></div>`;
