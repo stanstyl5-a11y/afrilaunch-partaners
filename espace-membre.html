@@ -71,9 +71,10 @@
   }
   .video-frame iframe, .video-frame video{position:absolute; inset:0; width:100%; height:100%; border:0; display:block;}
   .video-shield{position:absolute; z-index:5; cursor:default;}
-  .video-shield.shield-share{bottom:0; left:0; width:16%; height:20%;}
-  .video-shield.shield-channel{top:0; left:0; width:34%; height:16%;}
-  .video-shield.shield-watch{bottom:0; right:0; width:34%; height:16%;}
+  .video-shield.shield-top{top:0; left:0; width:100%; height:30%;}
+  .video-shield.shield-bottom{bottom:0; left:0; width:100%; height:30%;}
+  .video-shield.shield-left{top:30%; left:0; width:30%; height:40%;}
+  .video-shield.shield-right{top:30%; right:0; width:30%; height:40%;}
   .video-frame.empty{
     display:flex; align-items:center; justify-content:center; background:var(--bg-alt);
     color:var(--ink-faint); font-size:13.5px;
@@ -262,7 +263,7 @@
 
     const embedUrl = toEmbedUrl(videoUrl);
     if (embedUrl) {
-      return `<div class="video-frame"><iframe src="${escapeHtml(embedUrl)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe><div class="video-shield shield-channel"></div><div class="video-shield shield-share"></div><div class="video-shield shield-watch"></div></div>`;
+      return `<div class="video-frame"><iframe src="${escapeHtml(embedUrl)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe><div class="video-shield shield-top"></div><div class="video-shield shield-bottom"></div><div class="video-shield shield-left"></div><div class="video-shield shield-right"></div></div>`;
     }
     // Pas un lien YouTube/Vimeo reconnu — on tente une vidéo directe (mp4...).
     return `<div class="video-frame"><video controls controlsList="nodownload noremoteplayback" disablePictureInPicture oncontextmenu="return false;" src="${escapeHtml(videoUrl)}"></video></div>`;
